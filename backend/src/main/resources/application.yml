@@ -1,0 +1,70 @@
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    multipart:
+      max-file-size: 4MB
+      file-size-threshold: 5MB
+      max-request-size: 5MB
+spring:
+  application:
+    name: studyloop-api
+  threads:
+    virtual:
+      enabled: true
+  jmx:
+    enabled: false
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 10000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+springdoc:
+  api-docs:
+    path: /api/docs/openapi.json
+  swagger-ui:
+    path: /api/docs
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-ttl-minutes: ${ACCESS_TOKEN_TTL_MINUTES:15}
+    refresh-ttl-days: ${REFRESH_TOKEN_TTL_DAYS:7}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
+  ai:
+    api-key: ${GEMINI_API_KEY:}
+    base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
+    chat-model: ${GEMINI_CHAT_MODEL:gemini-3.5-flash}
+    fast-model: ${GEMINI_FAST_MODEL:gemini-3.1-flash-lite}
+    embed-model: ${GEMINI_EMBED_MODEL:gemini-embedding-2}
+  similarity:
+    duplicate-threshold: ${SIM_DUPLICATE_THRESHOLD:0.80}
+    grounding-threshold: ${SIM_GROUNDING_THRESHOLD:0.65}
+    semantic-floor: ${SIM_SEMANTIC_FLOOR:0.50}
+    semantic-ceil: ${SIM_SEMANTIC_CEIL:0.90}
+  demo:
+    enabled: ${DEMO_MODE:false}
+    seed: ${SEED_DEMO:false}
+    admin-token: ${ADMIN_TOKEN:}
+  version:
+    git-sha: ${RENDER_GIT_COMMIT:local}

@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #f6f5f1;
+  --color-surface: #ffffff;
+  --color-surface-2: #fbfaf7;
+  --color-code: #f3f2ee;
+  --color-ink: #15171c;
+  --color-ink-2: #4a505c;
+  --color-ink-3: #858b96;
+  --color-line: #e5e3dc;
+  --color-line-strong: #d2cfc6;
+  --color-brand: #4338ca;
+  --color-brand-hover: #3730a3;
+  --color-brand-soft: #eef0ff;
+  --color-hint: #b45309;
+  --color-hint-soft: #fff6e5;
+  --color-hint-line: #f5c77a;
+  --color-ai: #0f766e;
+  --color-ai-soft: #e7f5f3;
+  --color-success: #15803d;
+  --color-success-soft: #eaf7ee;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fdecec;
+
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui;
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-card: 14px;
+  --radius-input: 10px;
+  --shadow-card: 0 1px 2px rgba(21, 23, 28, 0.04), 0 4px 16px rgba(21, 23, 28, 0.04);
+  --shadow-hover: 0 6px 24px rgba(21, 23, 28, 0.08);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 32px;
+  line-height: 38px;
+}
+@media (min-width: 640px) {
+  .t-display {
+    font-size: 44px;
+    line-height: 52px;
+  }
+}
+.t-h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 30px;
+  line-height: 38px;
+}
+.t-h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 30px;
+}
+.t-h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 26px;
+}
+.t-small {
+  font-size: 13px;
+  line-height: 20px;
+}
+.t-micro {
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.container-page {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+@media (min-width: 768px) {
+  .container-page {
+    padding-inline: 24px;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #eceae4 25%, #f4f2ed 37%, #eceae4 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md p {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 24px;
+}
+.md ul,
+.md ol {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+.md ul {
+  list-style: disc;
+}
+.md ol {
+  list-style: decimal;
+}
+.md li {
+  margin: 2px 0;
+}
+.md a {
+  color: var(--color-brand);
+  text-decoration: underline;
+}
+.md a.cite {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-hint-soft);
+  color: var(--color-hint);
+  border: 1px solid var(--color-hint-line);
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.md code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--color-code);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.md pre {
+  background: var(--color-code);
+  border-radius: 10px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 0 0 10px;
+}
+.md pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 13px;
+  line-height: 20px;
+}
+.md table {
+  border-collapse: collapse;
+  margin: 0 0 10px;
+  display: block;
+  overflow-x: auto;
+}
+.md th,
+.md td {
+  border: 1px solid var(--color-line);
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 14px;
+}
+.md blockquote {
+  margin: 0 0 10px;
+  padding-left: 12px;
+  border-left: 3px solid var(--color-line-strong);
+  color: var(--color-ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

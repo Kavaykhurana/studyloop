@@ -1,0 +1,15 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: studyloop
+      POSTGRES_USER: studyloop
+      POSTGRES_PASSWORD: studyloop
+    ports: ["5432:5432"]
+    volumes: [studyloop-db:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U studyloop"]
+      interval: 5s
+      retries: 10
+volumes:
+  studyloop-db: {}

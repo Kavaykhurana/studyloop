@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: studyloop-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_CHAT_MODEL
+        value: gemini-3.5-flash
+      - key: GEMINI_FAST_MODEL
+        value: gemini-3.1-flash-lite
+      - key: GEMINI_EMBED_MODEL
+        value: gemini-embedding-2
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: DEMO_MODE
+        value: "true"
+      - key: SEED_DEMO
+        value: "true"
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: https://studyloop.vercel.app

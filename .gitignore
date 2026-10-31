@@ -1,0 +1,22 @@
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# backend
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.log
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# tooling
+.idea/
+.vscode/
+.DS_Store
+graphify-out/cache/
+graphify-out/*.json
+graphify-out/*.html

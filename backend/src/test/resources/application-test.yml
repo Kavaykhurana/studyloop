@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: true
+app:
+  jwt:
+    secret: dGVzdC1vbmx5LXNlY3JldC1rZXktZm9yLXN0dWR5bG9vcC1pbnRlZ3JhdGlvbi10ZXN0cy0wMTIzNDU2Nzg5
+    access-ttl-minutes: 15
+    refresh-ttl-days: 7
+  cookie:
+    secure: false
+  cors:
+    allowed-origins: http://localhost:5173
+  ai:
+    api-key: ""
+  similarity:
+    duplicate-threshold: 0.65
+    grounding-threshold: 0.40
+    semantic-floor: 0.25
+    semantic-ceil: 0.75
+  demo:
+    enabled: true
+    seed: false
+    admin-token: test-admin-token
+  version:
+    git-sha: test
+logging:
+  level:
+    com.studyloop: WARN

@@ -1,0 +1,6 @@
+logging:
+  level:
+    com.studyloop: DEBUG
+spring:
+  jpa:
+    show-sql: false

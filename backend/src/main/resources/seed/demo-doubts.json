@@ -1,0 +1,1640 @@
+{
+ "doubts": [
+  {
+   "key": "dsa-01",
+   "subject": "DSA",
+   "topic": "Trees & BST",
+   "difficulty": 2,
+   "author": "Kabir Sethi",
+   "title": "Why does my BST insert become O(n) on sorted input?",
+   "body": "Our DSA lab evaluation is on Friday and my BST code is suddenly super slow. I am inserting the numbers 1, 2, 3, ... 1000 in order and the whole thing takes as long as a linked list. When I insert random numbers it is fast. Sir said in class that BST insert is O(log n) so I am confused.\n\nThis is my insert:\n\n```java\nNode insert(Node root, int key) {\n    if (root == null) return new Node(key);\n    if (key < root.key) root.left = insert(root.left, key);\n    else root.right = insert(root.right, key);\n    return root;\n}\n```\n\nIs my code wrong, or is the O(log n) claim only true sometimes? How do I fix it?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 210.87,
+   "solvedAfterMinutes": 80,
+   "views": 91,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 21,
+     "accepted": true,
+     "rating": 5,
+     "body": "Your code is correct. The O(log n) claim is really \"O(height)\", and the height depends on the insertion order.\n\nWhen you insert 1, 2, 3, ... in sorted order, every new key is bigger than everything already in the tree, so it always goes to the right:\n\n```\n1\n \\\n  2\n   \\\n    3\n     \\\n      4\n       \\\n        5\n```\n\nWith 5 nodes the height is 5, with 1000 nodes the height is 1000. Each insert walks the whole chain, so inserting n keys costs 1 + 2 + ... + n = O(n^2) and a single insert is O(n). This shape is called a degenerate tree.\n\nWays to fix it:\n- Use a self-balancing tree. AVL and Red-Black trees rotate after inserts so the height stays O(log n). In Java, `TreeMap` is a Red-Black tree.\n- If the input is known up front, shuffle it before inserting. Random order gives an expected height of about 1.39 log2 n.\n- For a one-time build from sorted data, pick the middle element as the root and recurse on both halves.\n\nSo the claim \"BST insert is O(log n)\" holds only for balanced trees. For a plain BST the worst case is O(n)."
+    },
+    {
+     "author": "Navya Iyer",
+     "afterMinutes": 47,
+     "accepted": false,
+     "rating": null,
+     "body": "Adding to the above: you can see this yourself by writing a small `height(Node)` method and printing it after inserting 1..1000 in order and then in a shuffled order. Sorted gives 1000, shuffled gives something around 20 to 25. That difference is the whole point of balancing.\n\nTo get a feel for how bad it is: 1000 sorted inserts cost about 500,000 node visits (1 + 2 + ... + 1000), while the shuffled order costs roughly 1000 x 10 = 10,000. That is a 50 times difference for only 1000 keys, and the gap grows with n. This is exactly why databases and standard libraries use balanced trees instead of plain BSTs."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-02",
+   "subject": "DSA",
+   "topic": "Dynamic Programming",
+   "difficulty": 3,
+   "author": "Karan Gill",
+   "title": "How is the 0/1 knapsack DP table filled, and why iterate capacity backwards in the 1D version?",
+   "body": "I understand the recursive idea for 0/1 knapsack (take the item or skip it) but the table filling is confusing me. Our teacher showed dp[i][w] for the 2D version and then said \"to save space use a 1D array but loop the capacity from W down to the weight\". I do not get why backwards. When I loop forwards, my answer for the same input becomes bigger than the 2D answer.\n\nExample I am practising: items (weight, value) = (1,1), (3,4), (4,5), (5,7) and capacity W = 7. 2D table gives 9 as the answer.\n\nCan someone explain the transition and the reason for the backward loop? This is for my mid-sem on Saturday.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 44.04,
+   "solvedAfterMinutes": 521,
+   "views": 19,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 13,
+     "accepted": true,
+     "rating": 5,
+     "body": "Let dp[i][c] be the best value using only the first i items with capacity c. For item i with weight w and value v:\n\n```\ndp[i][c] = dp[i-1][c]                       if c < w\ndp[i][c] = max(dp[i-1][c], dp[i-1][c-w] + v) if c >= w\n```\n\nSkip the item, or take it and add v to the best value for the remaining capacity c - w from the previous row. For your example the last row is `[0, 1, 1, 4, 5, 7, 8, 9]`, so dp[4][7] = 9 (the items of weight 3 and 4).\n\nEach row depends only on the previous row, so you can keep one array. The catch is the order. dp[c] needs the OLD value of dp[c - w], the value from row i-1.\n\n- Looping c upwards: when you reach c, dp[c - w] has already been updated for item i, so you may use the same item twice. That is the unbounded knapsack, which is why your answer becomes larger.\n- Looping c downwards: dp[c - w] is at a smaller index and has not been touched yet in this round, so it still holds row i-1. Each item is used at most once.\n\n```java\nfor (int i = 0; i < n; i++)\n    for (int c = W; c >= wt[i]; c--)\n        dp[c] = Math.max(dp[c], dp[c - wt[i]] + val[i]);\n```\n\nTime is O(nW) in both versions, space drops from O(nW) to O(W)."
+    },
+    {
+     "author": "Sneha Pillai",
+     "afterMinutes": 60,
+     "accepted": false,
+     "rating": null,
+     "body": "A quick check you can run on your own example: use one item (weight 3, value 4) and capacity 6. Going backwards gives dp[6] = 4 because the item is taken once. Going forwards gives dp[6] = 8 because the item gets counted twice. If you can see that, you understand the backward loop.\n\nYou can also print the dp array after each item for your example. After the first item (1,1) it is [0,1,1,1,1,1,1,1]. After (3,4) it becomes [0,1,1,4,5,5,5,5], which matches the 2D rows exactly. If your printed row ever differs from the 2D table, the loop direction is the first thing to check."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-03",
+   "subject": "DSA",
+   "topic": "Linked Lists",
+   "difficulty": 2,
+   "author": "Arjun Malhotra",
+   "title": "Detect a cycle in a singly linked list: why do the slow and fast pointers always meet?",
+   "body": "For the lab I have to detect a loop in a linked list without using extra memory. I found Floyd's tortoise and hare method online. Slow moves one step, fast moves two steps, and if they meet there is a cycle. The code makes sense but I do not understand why they must meet. Fast could jump over slow, right? Like if slow is at node 5 and fast is at node 4 they will swap places and miss each other?\n\nAlso sir asked us to find the node where the cycle starts. I cannot see how to get that from the meeting point.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 29.11,
+   "solvedAfterMinutes": 674,
+   "views": 57,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 163,
+     "accepted": true,
+     "rating": 5,
+     "body": "Fast cannot jump over slow, because inside the cycle the gap between them changes by exactly one node per step.\n\nOnce both pointers are inside the cycle, say fast is `d` nodes behind slow along the cycle. In each step slow moves 1 and fast moves 2, so the gap shrinks by 1: d, d-1, ..., 1, 0. When it hits 0 they are on the same node. A gap can never go from 1 straight to -1, so there is no \"swapping places\" case. If fast moved 3 steps per round it could skip over slow, which is why 2 is the right choice.\n\nFinding the start of the cycle:\n- Let `a` be the distance from the head to the cycle start, and `b` the distance from the cycle start to the meeting point, and `L` the cycle length.\n- Slow travelled a + b, fast travelled 2(a + b). Their difference is a whole number of laps: a + b = kL.\n- So a = kL - b, meaning that walking `a` steps from the meeting point lands on the cycle start.\n\n```java\nListNode slow = head, fast = head;\nwhile (fast != null && fast.next != null) {\n    slow = slow.next; fast = fast.next.next;\n    if (slow == fast) {\n        ListNode p = head;\n        while (p != slow) { p = p.next; slow = slow.next; }\n        return p;           // start of the cycle\n    }\n}\nreturn null;                // no cycle\n```"
+    },
+    {
+     "author": "Vikram Sandhu",
+     "afterMinutes": 174,
+     "accepted": false,
+     "rating": null,
+     "body": "Space is O(1) and time is O(n): slow enters the cycle after a steps and the gap closes within L more steps, so the total is at most a + L steps. Just remember the null check on `fast.next`, otherwise you crash on lists without a cycle.\n\nTo test your code, try three lists: an empty list, a single node pointing to itself, and a list where the last node points back to the second node. Print the node where the cycle starts for each. Also try a long list with no cycle, such as 1 to 100000, to confirm that fast reaches null and the loop ends in linear time."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-04",
+   "subject": "DSA",
+   "topic": "Sorting & Searching",
+   "difficulty": 1,
+   "author": "Gurnoor Dhillon",
+   "title": "My binary search goes into an infinite loop sometimes",
+   "body": "I wrote binary search for the lab and it works on most inputs but hangs on some, for example searching 8 in [2, 8]. I used low = mid in the else branch because I thought we should keep mid in the range. Here is the loop:\n\n```c\nint low = 0, high = n - 1;\nwhile (low < high) {\n    int mid = (low + high) / 2;\n    if (a[mid] < key) low = mid;\n    else high = mid;\n}\n```\n\nWhy does it hang? Also a friend told me (low + high) / 2 can be a bug in some cases, is that true?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 24.41,
+   "solvedAfterMinutes": 350,
+   "views": 39,
+   "answers": [
+    {
+     "author": "Ishaan Gupta",
+     "afterMinutes": 5,
+     "accepted": true,
+     "rating": 5,
+     "body": "With `low = mid`, the range may not shrink. Take [2, 8] with low = 0, high = 1. Then mid = (0 + 1) / 2 = 0. If a[0] < key you set low = mid = 0, which is the same as before. The loop never ends because low and high never change.\n\nFix it by always moving past mid, since you have already compared it:\n\n```c\nint low = 0, high = n - 1;\nwhile (low <= high) {\n    int mid = low + (high - low) / 2;\n    if (a[mid] == key) return mid;\n    if (a[mid] < key) low = mid + 1;\n    else high = mid - 1;\n}\nreturn -1;\n```\n\nEvery iteration now removes at least one element, so it must terminate.\n\nAbout your friend's point: (low + high) can overflow when both are large ints (above about 1 billion), giving a negative mid. `low + (high - low) / 2` never overflows. This famous bug was in the JDK's binary search for years, so using the safe form is a good habit."
+    },
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 63,
+     "accepted": false,
+     "rating": null,
+     "body": "One thing to remember: the loop condition and the updates go together. `while (low <= high)` pairs with `mid + 1` and `mid - 1`. The other style, `while (low < high)` with `high = mid`, needs the lower mid and `low = mid + 1`. Mixing the two styles is what creates infinite loops, so pick one and stay with it.\n\nTo test it, run your function on arrays of size 0, 1 and 2, and with a key smaller than every element and larger than every element. These edge cases are where almost every binary search bug shows up, and a loop that handles all of them correctly is very likely right for the general case too."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-05",
+   "subject": "DSA",
+   "topic": "Graphs",
+   "difficulty": 2,
+   "author": "Dev Khanna",
+   "title": "BFS vs DFS: which one gives the shortest path in an unweighted graph?",
+   "body": "Quiz question in our class: \"Which traversal should be used to find the shortest path between two nodes in an unweighted graph?\" I answered DFS because I find it easier to code, and I lost marks. The explanation said BFS but I did not get it.\n\nDFS also reaches the target node, right? And it also finds a path. So why is the path from DFS not the shortest? Can someone explain with a small example? Also how do I recover the actual path and not just the distance?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 37.01,
+   "solvedAfterMinutes": 339,
+   "views": 60,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 87,
+     "accepted": true,
+     "rating": 4,
+     "body": "DFS finds a path, but not necessarily the shortest one. BFS finds the shortest path (fewest edges) because of the order in which it visits nodes.\n\nExample: edges A-B, B-C, C-D, A-D. Shortest path from A to D is the direct edge, length 1. If DFS goes A -> B first, it continues B -> C -> D and reaches D with length 3. It stops there and never looks at the direct edge.\n\nBFS uses a queue and visits all nodes at distance 1, then all nodes at distance 2, and so on. The first time it reaches a node is guaranteed to be through the smallest number of edges.\n\nTo recover the path, store the parent of each node when you first discover it, then walk back from the target:\n\n```java\nint[] parent = new int[n];\nArrays.fill(parent, -1);\nQueue<Integer> q = new ArrayDeque<>();\nq.add(src); parent[src] = src;\nwhile (!q.isEmpty()) {\n    int u = q.poll();\n    for (int v : adj.get(u))\n        if (parent[v] == -1) { parent[v] = u; q.add(v); }\n}\n// path: start at dst, follow parent[] until src, then reverse\n```\n\nComplexity is O(V + E). For weighted graphs BFS no longer works and you need Dijkstra."
+    },
+    {
+     "author": "Navya Iyer",
+     "afterMinutes": 294,
+     "accepted": false,
+     "rating": null,
+     "body": "A way to remember it: BFS expands in rings around the source, so the first ring that touches the target gives the shortest distance. DFS dives down one branch and commits to whatever it finds first.\n\nOn weighted graphs the same idea needs a priority queue instead of a plain queue, which is Dijkstra's algorithm. A good exam answer mentions all three cases: BFS for unweighted shortest paths in O(V + E), Dijkstra for non-negative weights in O((V + E) log V), and Bellman-Ford when negative edges are present. Knowing when each one applies earns the marks."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-06",
+   "subject": "DSA",
+   "topic": "Stacks & Queues",
+   "difficulty": 2,
+   "author": "Siddharth Jain",
+   "title": "Infix to postfix: my stack gives the wrong order for a - b - c",
+   "body": "I wrote infix to postfix conversion using a stack for the lab. It works for a + b * c, which gives abc*+. But a - b - c gives abc-- instead of ab-c-. My code pops operators only when the stack top has strictly greater precedence than the current operator. Then I tried a ^ b ^ c and the textbook says the answer is abc^^, which looks like what I get.\n\nSo the same rule works for one case and breaks another. What exactly is the rule for operators with equal precedence?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 61.75,
+   "solvedAfterMinutes": 603,
+   "views": 14,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 67,
+     "accepted": true,
+     "rating": 5,
+     "body": "The rule depends on associativity.\n\n- For left-associative operators (+, -, *, /): pop while the top of the stack has precedence greater than OR EQUAL to the current operator. So in `a - b - c`, when the second `-` arrives the stack holds `-`, which is equal, so you pop it first. Output: `ab-c-`, which means (a - b) - c.\n- For right-associative operators (^ and assignment): pop only while the top has strictly greater precedence. So in `a ^ b ^ c`, the second `^` does not pop the first, and the result is `abc^^`, which means a ^ (b ^ c).\n\nYour code uses \"strictly greater\" for everything. That is correct for `^` but wrong for `-`.\n\n```java\nwhile (!st.isEmpty() && st.peek() != '('\n       && (prec(st.peek()) > prec(c)\n           || (prec(st.peek()) == prec(c) && isLeftAssoc(c))))\n    out.append(st.pop());\nst.push(c);\n```\n\nTest with `a-b-c` (expect `ab-c-`) and `a^b^c` (expect `abc^^`). Also remember to pop everything left on the stack at the end, and treat `(` and `)` separately."
+    },
+    {
+     "author": "Vikram Sandhu",
+     "afterMinutes": 195,
+     "accepted": false,
+     "rating": null,
+     "body": "If you evaluate your postfix output with a second stack you can catch this bug automatically. Evaluate `abc--` with a=9, b=5, c=2: you get 9 - (5 - 2) = 6, but the infix 9 - 5 - 2 is 2. A mismatch like that tells you the conversion is wrong.\n\nAlso check parentheses before submitting: for (a + b) * c the output should be ab+c*, which means the opening bracket must stay on the stack until its matching closing bracket arrives, and then everything above it is popped. Missing that case is the second most common bug in this lab."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-07",
+   "subject": "DSA",
+   "topic": "Complexity Analysis",
+   "difficulty": 1,
+   "author": "Kabir Sethi",
+   "title": "Is O(n log n) always faster than O(n^2)? My test with n = 10 says otherwise",
+   "body": "We learned that merge sort is O(n log n) and bubble sort is O(n^2) so merge sort should always be faster. But I timed both on an array of 10 numbers and bubble sort finished first. Then I tried 100 and merge sort still did not win by much.\n\nIs my code wrong or is O(n log n) not always faster? What does Big-O really promise?",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 156.82,
+   "solvedAfterMinutes": 1378,
+   "views": 91,
+   "answers": [
+    {
+     "author": "Tanvi Rao",
+     "afterMinutes": 118,
+     "accepted": false,
+     "rating": null,
+     "body": "Big-O is an asymptotic statement: \"for large enough n, the n log n algorithm wins\". It does not say where \"large enough\" starts. Real running time includes constants. Say merge sort costs 100 * n * log2(n) operations (allocation, copying) and bubble sort costs n * n.\n\n- n = 10: merge sort 3,322 versus bubble 100. Bubble wins easily.\n- n = 100: 66,439 versus 10,000. Bubble still wins.\n- n = 1000: about 996,578 versus 1,000,000. They are almost equal.\n- Beyond n of about 1000, merge sort wins and the gap keeps growing.\n\nThat is why library sorts such as Java's TimSort switch to insertion sort for small chunks. So your code is not wrong. Test with n = 100,000 and you will see the difference."
+    }
+   ],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Big-O describes how running time grows as n becomes very large. Does it say anything about the constants hidden behind the notation, or about small n?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Big-O drops constant factors and lower-order terms, so a real running time looks like `c1 * n log n + overhead` versus `c2 * n^2`.\n- Compare the two functions at different values of n, using realistic constants (merge sort allocates and copies arrays, bubble sort only swaps in place).\n- Find the crossover point where the n log n curve finally drops below the n^2 curve.\n- Pitfall: timing tiny inputs mostly measures start-up cost and cache effects, not the algorithm."
+    }
+   ]
+  },
+  {
+   "key": "dsa-08",
+   "subject": "DSA",
+   "topic": "Arrays & Strings",
+   "difficulty": 1,
+   "author": "Gurnoor Dhillon",
+   "title": "Reverse the words in a string in place, but my output has extra spaces",
+   "body": "Lab question: reverse the order of words in a string, like \"the sky is blue\" becomes \"blue is sky the\". We are supposed to do it in place using a char array. My idea was to reverse the whole string and then reverse each word. It works when words are separated by exactly one space but if the input has extra spaces at the start or end, the output also has them in the wrong places.\n\nHow should I handle the extra spaces without using split()?",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 116.53,
+   "solvedAfterMinutes": 1883,
+   "views": 21,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Your reverse-all-then-reverse-each-word idea is right. Ask yourself: what should happen to the spaces before you reverse any word, so that the reversal step only ever sees single spaces?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Step 1: clean the spaces first with a two-pointer pass (a read index and a write index): skip leading spaces, copy letters, and write at most one space between words, then drop the trailing one.\n- Step 2: reverse the cleaned range completely.\n- Step 3: walk through it again and reverse each word between spaces.\n- Pitfall: remember to use the new length after cleaning, not the original length, when you reverse."
+    }
+   ]
+  },
+  {
+   "key": "dsa-09",
+   "subject": "DSA",
+   "topic": "Sorting & Searching",
+   "difficulty": 1,
+   "author": "Karan Gill",
+   "title": "Why is quicksort O(n^2) in the worst case and when does it happen?",
+   "body": "Everyone says quicksort is fast in practice, but my notes say worst case O(n^2). I do not understand how a divide and conquer algorithm can become quadratic. In the exam they will probably ask for the input that causes the worst case. I am using the last element as pivot in my code.\n\nPlease also explain what the average case looks like and why choosing a random pivot helps. I will be solving previous year questions on this tomorrow.",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 82.58,
+   "solvedAfterMinutes": 2005,
+   "views": 70,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Think about what a \"good\" partition looks like and what a \"bad\" one looks like. If the pivot is the last element and the array is already sorted, where does the pivot end up after partitioning, and how big are the two sides?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Write the recurrence for a bad split: one side has n-1 elements and the other has 0, so T(n) = T(n-1) + O(n).\n- Unroll it to see the sum n + (n-1) + ... + 1.\n- Identify which inputs cause this with a last-element pivot (sorted or reverse sorted arrays, or all equal keys with a naive partition).\n- Compare with the balanced split T(n) = 2T(n/2) + O(n).\n- Pitfall: random pivot or median-of-three makes the bad case very unlikely."
+    }
+   ]
+  },
+  {
+   "key": "dsa-10",
+   "subject": "DSA",
+   "topic": "Trees & BST",
+   "difficulty": 3,
+   "author": "Siddharth Jain",
+   "title": "Deleting a BST node with two children: inorder successor or predecessor, does it matter?",
+   "body": "Our textbook deletes a node with two children by replacing it with the inorder successor (smallest in the right subtree). My friend's notes use the inorder predecessor (largest in the left subtree). Both seem to work on the examples I tried.\n\nAre both correct? Is one of them better? Also I keep making a mistake after copying the successor's value: I forget to delete the successor node and then I have duplicate keys in the tree.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 35.11,
+   "solvedAfterMinutes": 0,
+   "views": 12,
+   "answers": [
+    {
+     "author": "Navya Iyer",
+     "afterMinutes": 5,
+     "accepted": false,
+     "rating": null,
+     "body": "Both are correct. The BST property needs the replacement key to be larger than everything in the left subtree and smaller than everything in the right subtree. The inorder successor is the smallest key in the right subtree, so it satisfies that. The inorder predecessor is the largest key in the left subtree, and it satisfies it too.\n\nThe successor always has no left child (otherwise there would be a smaller key), so removing it is easy: it has at most one child, on the right. The predecessor has no right child for the same reason.\n\nThe procedure, using the successor:\n1. Find the successor: go to the right child, then keep going left.\n2. Copy its key into the node you are deleting.\n3. Delete the successor from the right subtree. This is a recursive call to delete(root.right, successorKey), and it is the step you forgot.\n\nChoice does not change the complexity (O(h)). Some implementations alternate between the two to keep the tree from leaning to one side over many deletions."
+    },
+    {
+     "author": "Sneha Pillai",
+     "afterMinutes": 192,
+     "accepted": false,
+     "rating": null,
+     "body": "Your duplicate key bug is the classic one. After copying the key you must remove the original successor node, otherwise the same key stays in the tree. A good test is to delete the root from a tree of 7 nodes and print the inorder traversal. It must stay sorted with no repeated values.\n\nFor practice, delete the root from the tree built by inserting 50, 30, 70, 20, 40, 60, 80. The inorder successor of 50 is 60, so 60 replaces 50 and the old leaf 60 is removed. Doing the predecessor version (40) on the same tree and comparing the two shapes is a good exercise for the lab viva."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-11",
+   "subject": "DSA",
+   "topic": "Graphs",
+   "difficulty": 3,
+   "author": "Arjun Malhotra",
+   "title": "Dijkstra gives a wrong answer with a negative edge, but sir said it works if there is no negative cycle",
+   "body": "Our teacher said \"Dijkstra fails with negative edges\" in one lecture and \"it is fine as long as there is no negative cycle\" in the revision class. I am confused which one is right. I tried a small graph: s -> a with weight 2, s -> b with weight 3, b -> a with weight -2. There is no negative cycle. Dijkstra from s gives dist(a) = 2 but I can reach a with cost 3 + (-2) = 1.\n\nDid I implement Dijkstra wrongly or is the statement wrong?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 54.98,
+   "solvedAfterMinutes": 0,
+   "views": 40,
+   "answers": [
+    {
+     "author": "Vikram Sandhu",
+     "afterMinutes": 141,
+     "accepted": false,
+     "rating": null,
+     "body": "Your implementation is fine. The statement \"Dijkstra works if there is no negative cycle\" is not true for the standard algorithm.\n\nDijkstra is greedy. When it takes the closest unvisited node out of the priority queue, it assumes no later path can be shorter, because all edge weights are non-negative and extending a path can only add cost. With a negative edge, that assumption breaks.\n\nOn your graph: from s, a has distance 2 and b has 3. Dijkstra picks a (distance 2) and finalises it. Later it reaches b and relaxes b -> a to 1, but a is already finalised, so the better value is never used. The correct answer for a is 1.\n\nOptions:\n- Bellman-Ford handles negative edges and detects negative cycles, in O(VE).\n- For a DAG, relax edges in topological order in O(V + E).\n- A variant of Dijkstra that lets nodes re-enter the queue gives correct results with negative edges (but no negative cycles), though its worst case is exponential. That is probably what sir meant, but it is not the standard algorithm."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-12",
+   "subject": "DSA",
+   "topic": "Dynamic Programming",
+   "difficulty": 2,
+   "author": "Kabir Sethi",
+   "title": "Climbing stairs recursion is too slow for n = 45. How does memoization change it?",
+   "body": "I wrote the recursive solution for the \"number of ways to climb n stairs taking 1 or 2 steps\" problem:\n\n```java\nint ways(int n) {\n    if (n <= 1) return 1;\n    return ways(n - 1) + ways(n - 2);\n}\n```\n\nIt works for small n but for n = 45 it takes forever. A senior told me to add memoization and it will become O(n). I added a HashMap but I am not sure I did it right, and I do not see why the time drops so much. How many calls are we saving?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 26.49,
+   "solvedAfterMinutes": 0,
+   "views": 16,
+   "answers": [
+    {
+     "author": "Tanvi Rao",
+     "afterMinutes": 127,
+     "accepted": false,
+     "rating": null,
+     "body": "The plain recursion recomputes the same subproblems again and again. ways(5) calls ways(4) and ways(3), and ways(4) calls ways(3) again. The call tree roughly doubles at each level, so the number of calls grows like 2^n, and for n = 45 that is billions of calls.\n\nThere are only n + 1 distinct subproblems (ways(0) to ways(n)). Memoization stores each result the first time you compute it, and later calls just look it up:\n\n```java\nlong[] memo = new long[n + 1];\nlong ways(int n) {\n    if (n <= 1) return 1;\n    if (memo[n] != 0) return memo[n];\n    return memo[n] = ways(n - 1) + ways(n - 2);\n}\n```\n\nEach subproblem is computed once with O(1) extra work, so the total is O(n) time and O(n) space. For n = 45 that is about 90 calls instead of billions.\n\nUse `long` as well: ways(45) is 1,836,311,903, close to the int limit."
+    },
+    {
+     "author": "Ishaan Gupta",
+     "afterMinutes": 256,
+     "accepted": false,
+     "rating": null,
+     "body": "You can also do it bottom-up with two variables, which is O(n) time and O(1) space: keep `prev` and `curr` and update them in a loop. It is the same idea as printing Fibonacci numbers. Top-down memoization is easier to derive, and bottom-up saves the recursion stack.\n\nAnother way to present the answer in an exam is through the state: ways(i) depends only on ways(i-1) and ways(i-2). Because only two previous values matter, you can drop the array completely. That is the standard space optimisation for one-dimensional DP problems like this one, and the same trick works for the house robber problem."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dsa-13",
+   "subject": "DSA",
+   "topic": "Linked Lists",
+   "difficulty": 2,
+   "author": "Dev Khanna",
+   "title": "How do I reverse a linked list in groups of k?",
+   "body": "I can reverse a whole singly linked list using three pointers (prev, curr, next). Our lab sheet now asks to reverse the list in groups of k nodes, for example 1->2->3->4->5->6->7 with k = 3 should become 3->2->1->6->5->4->7. The last group has fewer than k nodes so it stays as it is.\n\nI tried calling my reverse function on every k nodes but I lose the connection between the groups. How should I join the reversed groups together?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 51.51,
+   "solvedAfterMinutes": 0,
+   "views": 13,
+   "answers": [],
+   "hints": []
+  },
+  {
+   "key": "dsa-14",
+   "subject": "DSA",
+   "topic": "Arrays & Strings",
+   "difficulty": 2,
+   "author": "Gurnoor Dhillon",
+   "title": "Sliding window maximum: I do not understand why we pop from the back of the deque",
+   "body": "For the sliding window maximum problem (window size k) I read the O(n) solution with a deque. The code removes indices from the back while the new element is bigger than them. I understand that the front of the deque holds the maximum of the window. But why is it safe to throw away the smaller elements at the back? What if one of them becomes the maximum later when the bigger element leaves the window?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 40.23,
+   "solvedAfterMinutes": 0,
+   "views": 28,
+   "answers": [],
+   "hints": []
+  },
+  {
+   "key": "dbms-01",
+   "subject": "DBMS",
+   "topic": "Normalization",
+   "difficulty": 3,
+   "author": "Dev Khanna",
+   "title": "How do I check if a relation is in BCNF when there are two candidate keys?",
+   "body": "We have a mid-sem on normalization and this question from the past paper is confusing me. Relation R(A, B, C, D) with functional dependencies:\n\nAB -> C\nC -> A\nAB -> D\n\nSir said first find all candidate keys and then check every FD. I found AB as a key, but my friend says there are two candidate keys. How do I find all of them? And how do I decide whether the relation is in BCNF? If it is not, how do I decompose it, and is the decomposition lossless?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 105.59,
+   "solvedAfterMinutes": 285,
+   "views": 46,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 19,
+     "accepted": true,
+     "rating": 5,
+     "body": "Step 1: candidate keys. Compute closures.\n- AB+ = {A, B, C, D} because AB -> C and AB -> D. So AB is a key.\n- BC+: C -> A gives A, so we have {B, C, A}; then AB -> D gives D. BC+ = {A, B, C, D}, so BC is also a key.\n- Any key needs B, because B appears on no right-hand side. A and C alone cannot work, and no single attribute is a key, so the candidate keys are AB and BC.\n\nStep 2: BCNF check. For every non-trivial FD X -> Y, X must be a superkey.\n- AB -> C: AB is a key. OK.\n- AB -> D: OK.\n- C -> A: C+ = {C, A}, which is not all attributes, so C is not a superkey. Violation. The relation is NOT in BCNF. (It is in 3NF, since A is a prime attribute.)\n\nStep 3: decompose using the violating FD C -> A.\n- R1(C, A), with FD C -> A. C is a key of R1.\n- R2(B, C, D): R minus the attribute A, keeping C as the link. Here BC is a key, so BC -> D holds and it is in BCNF.\n\nLossless check: R1 and R2 share only C, and C -> A means C is a key of R1, so R1 join R2 gives back R exactly. Note that AB -> C is not preserved by this decomposition. BCNF decomposition is always lossless but may lose dependencies; that is the price versus 3NF."
+    },
+    {
+     "author": "Simran Kaur",
+     "afterMinutes": 45,
+     "accepted": false,
+     "rating": null,
+     "body": "A shortcut for the exam: write the closure of the left side of every FD. If any closure is not the full attribute set (and the FD is non-trivial), you already have a BCNF violation. Do the key-finding only when you need it for the 3NF check, where prime attributes matter. Here C+ = {C, A} settles it in one line.\n\nAlso note the difference between being in BCNF and being dependency preserving: the decomposition (C, A) and (B, C, D) is lossless, but the FD AB -> C cannot be checked on either table alone. Examiners often ask this follow-up, so mention it in your answer."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-02",
+   "subject": "DBMS",
+   "topic": "Normalization",
+   "difficulty": 1,
+   "author": "Karan Gill",
+   "title": "Difference between 3NF and BCNF: when can a relation be in 3NF but not in BCNF?",
+   "body": "I know BCNF is stricter than 3NF but I cannot come up with an example where a relation is in 3NF and not in BCNF. In class sir said \"3NF allows a dependency X -> A if A is a prime attribute\". I understand the sentence but not the example. Please give a small relation with FDs that is in 3NF but not BCNF, and explain why 3NF allows it.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 58.82,
+   "solvedAfterMinutes": 507,
+   "views": 63,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 18,
+     "accepted": true,
+     "rating": 5,
+     "body": "Take R(A, B, C) with FDs: AB -> C and C -> B.\n\nCandidate keys: AB+ = {A, B, C}, so AB is a key. AC+: C -> B gives B, so AC+ = {A, B, C} and AC is a key too. So the keys are AB and AC, and the prime attributes are A, B and C (every attribute appears in some key).\n\nCheck the FDs:\n- AB -> C: AB is a superkey. Fine for both forms.\n- C -> B: C is not a superkey, so this violates BCNF. But in 3NF the rule is \"X is a superkey OR the right side A is a prime attribute\". B is prime, so 3NF accepts it.\n\nSo the relation is in 3NF but not in BCNF.\n\nWhy does 3NF allow it? 3NF was designed so that a lossless, dependency-preserving decomposition always exists. BCNF cannot always give you that. Decomposing this relation into (C, B) and (A, C) is lossless, but the FD AB -> C can no longer be checked inside a single table. So 3NF accepts a little redundancy (B repeated for every row with the same C) to keep dependencies enforceable."
+    },
+    {
+     "author": "Simran Kaur",
+     "afterMinutes": 117,
+     "accepted": false,
+     "rating": null,
+     "body": "A real-life version of the same shape: a table (Student, Subject, Teacher) where each teacher teaches only one subject and each student has one teacher per subject. Teacher -> Subject violates BCNF because Teacher is not a key, but it is still in 3NF since Subject is a prime attribute.\n\nTo spot this in the exam, check each FD for the BCNF violation first. If a left side is not a superkey, look at the right side: if every attribute on it belongs to some candidate key (is prime), the relation is still in 3NF. Doing it in this order makes questions on 3NF versus BCNF take under a minute."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-03",
+   "subject": "DBMS",
+   "topic": "Normalization",
+   "difficulty": 2,
+   "author": "Karan Gill",
+   "title": "Finding all candidate keys for R(A,B,C,D,E) with A->B, BC->E, ED->A",
+   "body": "Past paper question: R(A, B, C, D, E) with FDs A -> B, BC -> E, ED -> A. Find all candidate keys.\n\nI started with attributes that do not appear on any right side. C and D never appear on the right, so every key must contain CD. CD+ is only {C, D} so I need to add more. I tried adding A and got ACD but I am not sure it is minimal and I do not know how to systematically find the others. I got 2 keys in the exam but I think there are 3.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 24.18,
+   "solvedAfterMinutes": 580,
+   "views": 63,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 15,
+     "accepted": true,
+     "rating": 5,
+     "body": "Your start is right: C and D appear on no right-hand side, so every candidate key must contain CD. Then try adding each remaining attribute (A, B, E) one at a time and take closures.\n\n- CD + A: ACD+. A -> B gives B, then BC -> E gives E. So ACD+ = {A, B, C, D, E}. Key.\n- CD + B: BCD+. BC -> E gives E, then ED -> A gives A. So BCD+ = {A, B, C, D, E}. Key.\n- CD + E: CDE+. ED -> A gives A, then A -> B gives B. So CDE+ = all. Key.\n\nEach of these is minimal: removing any one attribute breaks it. For example, AD+ = {A, B, D} and AC+ = {A, B, C, E} (no D), and CD+ is only {C, D}. Since they all contain CD and differ in the third attribute, none contains another.\n\nSo there are three candidate keys: ACD, BCD and CDE. That is why you saw 3 in your head: you found ACD but must also try B and E as the third attribute.\n\nEvery attribute appears in some key, so all attributes are prime. Then the relation is in 3NF automatically (a relation whose attributes are all prime is always in 3NF)."
+    },
+    {
+     "author": "Ira Kapoor",
+     "afterMinutes": 219,
+     "accepted": false,
+     "rating": null,
+     "body": "Systematic method to remember: (1) attributes that never appear on the right must be in every key, (2) attributes that appear only on the right are in no key, (3) for the rest, add one attribute at a time to the mandatory set and test closures, then try pairs only if singles fail. Keep a note of the keys found so you can skip any set that contains one of them.\n\nFinish by writing the keys as a set, {ACD, BCD, CDE}, so the examiner can see that you checked every combination and not only the first one you found."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-04",
+   "subject": "DBMS",
+   "topic": "Transactions & Concurrency",
+   "difficulty": 2,
+   "author": "Dev Khanna",
+   "title": "Conflict serializable vs view serializable: how do I draw the precedence graph?",
+   "body": "I have a schedule S: r1(A) r2(A) w1(A) w2(A) and the question asks whether it is conflict serializable. I know we draw a precedence graph and check for a cycle, but I do not know which pairs of operations give an edge. I also do not understand when a schedule is view serializable but not conflict serializable. Sir mentioned blind writes but I did not follow. Please explain with an example.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 27.47,
+   "solvedAfterMinutes": 551,
+   "views": 12,
+   "answers": [
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 12,
+     "accepted": true,
+     "rating": 5,
+     "body": "Two operations conflict if they belong to different transactions, touch the same data item, and at least one is a write. So the conflicting pairs are read-write, write-read and write-write. For each conflicting pair where Ti's operation comes first, draw an edge Ti -> Tj.\n\nYour schedule S: r1(A) r2(A) w1(A) w2(A).\n- r1(A) before w2(A): edge T1 -> T2.\n- r2(A) before w1(A): edge T2 -> T1.\n- w1(A) before w2(A): edge T1 -> T2 (again).\nThe graph has T1 -> T2 and T2 -> T1, which is a cycle. So S is NOT conflict serializable.\n\nView serializability is weaker. Two schedules are view equivalent if (1) each transaction reads the same initial or written values, and (2) the final write on each item is by the same transaction. Example: S' = r1(A) w2(A) w1(A) w3(A).\n- The precedence graph has T1 -> T2 (r1 before w2) and T2 -> T1 (w2 before w1): a cycle, so it is not conflict serializable.\n- But compare with the serial order T1, T2, T3: T1 reads the initial A in both, and T3 makes the final write in both. They are view equivalent, so S' is view serializable.\n\nThe writes by T2 and T1 that nobody reads are \"blind writes\". Every conflict serializable schedule is view serializable, but not the other way around."
+    },
+    {
+     "author": "Simran Kaur",
+     "afterMinutes": 152,
+     "accepted": false,
+     "rating": null,
+     "body": "Exam tip: view serializability testing is NP-complete, so questions are usually small. For anything with only reads before writes by the same transaction (no blind writes), conflict and view serializability give the same answer, so just draw the precedence graph and look for a cycle.\n\nIf the schedule has more than two transactions, list the edges in a table first (the pair of operations and the reason) and only then draw the graph. It prevents missed edges. Remember that an acyclic graph gives you an equivalent serial order through a topological sort, and that is often asked as a follow-up: give an equivalent serial schedule."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-05",
+   "subject": "DBMS",
+   "topic": "SQL Queries",
+   "difficulty": 1,
+   "author": "Aanya Sharma",
+   "title": "Difference between WHERE and HAVING? I get an error when I use COUNT in WHERE",
+   "body": "For the SQL lab I wrote this query to list departments that have more than 5 employees:\n\n```sql\nSELECT dept_id, COUNT(*)\nFROM employee\nWHERE COUNT(*) > 5\nGROUP BY dept_id;\n```\n\nIt gives an error saying aggregate functions are not allowed in WHERE. My friend says to use HAVING instead but when I read about HAVING it looks the same as WHERE to me. What is the actual difference, and when do I use which one? This is for the lab evaluation on Monday.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 32.37,
+   "solvedAfterMinutes": 202,
+   "views": 89,
+   "answers": [
+    {
+     "author": "Riya Chopra",
+     "afterMinutes": 24,
+     "accepted": true,
+     "rating": 5,
+     "body": "They filter at different stages of the query:\n\n- WHERE filters individual rows BEFORE grouping. The aggregate values do not exist yet at that point, which is why COUNT(*) is not allowed there.\n- HAVING filters whole groups AFTER GROUP BY has formed them, so it can use aggregates.\n\nThe logical order is: FROM -> WHERE -> GROUP BY -> HAVING -> SELECT -> ORDER BY.\n\nYour corrected query:\n\n```sql\nSELECT dept_id, COUNT(*) AS emp_count\nFROM employee\nGROUP BY dept_id\nHAVING COUNT(*) > 5;\n```\n\nYou can use both together: first remove rows you do not want, then filter groups.\n\n```sql\nSELECT dept_id, AVG(salary)\nFROM employee\nWHERE status = 'ACTIVE'        -- row filter, before grouping\nGROUP BY dept_id\nHAVING AVG(salary) > 50000;    -- group filter, after grouping\n```\n\nRule of thumb: if the condition mentions an aggregate (COUNT, SUM, AVG, MIN, MAX), it belongs in HAVING. Otherwise put it in WHERE, because filtering early is faster."
+    },
+    {
+     "author": "Zoya Khan",
+     "afterMinutes": 196,
+     "accepted": false,
+     "rating": null,
+     "body": "Small addition: a condition on a plain column such as dept_id can technically go in HAVING when that column is in GROUP BY, but it is better in WHERE because it removes rows before the grouping work. The database does less work, and your query reads more clearly to the examiner.\n\nIn MySQL you can sometimes use the SELECT alias inside HAVING, but PostgreSQL does not allow it and standard SQL does not guarantee it. To be safe in the lab evaluation, repeat the aggregate expression in HAVING instead of using the alias."
+    },
+    {
+     "author": "Ira Kapoor",
+     "afterMinutes": 368,
+     "accepted": false,
+     "rating": null,
+     "body": "Practice question to test yourself: list the departments whose average salary is above the company-wide average salary. You need HAVING for the group condition and a subquery for the company average, like HAVING AVG(salary) > (SELECT AVG(salary) FROM employee). If that makes sense, you understand HAVING.\n\nThe full query would look like this: SELECT dept_id, AVG(salary) FROM employee GROUP BY dept_id HAVING AVG(salary) > (SELECT AVG(salary) FROM employee). The subquery runs once and gives one number, which every group is compared with. Try it on a small table of five rows first, so you can verify the output by hand."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-06",
+   "subject": "DBMS",
+   "topic": "Indexing & B+ Trees",
+   "difficulty": 3,
+   "author": "Karan Gill",
+   "title": "How do I find the height of a B+ tree for 1 million records with a 4 KB block?",
+   "body": "Question from the DBMS tutorial sheet: block size 4096 bytes, search key 8 bytes, block pointer 8 bytes, 1,000,000 records indexed by a B+ tree. Find the order of the tree and the number of levels (height) needed.\n\nI know an internal node with p pointers has p - 1 keys. I think the formula is 8p + 8(p - 1) <= 4096 but then I get stuck on how to find the number of leaf nodes and how many levels that gives. Do I use the minimum or maximum fill?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 20.39,
+   "solvedAfterMinutes": 293,
+   "views": 68,
+   "answers": [
+    {
+     "author": "Simran Kaur",
+     "afterMinutes": 160,
+     "accepted": true,
+     "rating": 5,
+     "body": "Order of an internal node: p pointers and p - 1 keys must fit in one block.\n\n8p + 8(p - 1) <= 4096, which gives 16p <= 4104, so p = 256 (since 16 * 257 = 4112 does not fit).\n\nLeaf node: it holds key and record pointer pairs plus one pointer to the next leaf. With q pairs: 16q + 8 <= 4096, so q = 255.\n\nNumber of levels:\n- Leaf level, with full leaves: ceil(1,000,000 / 255) = 3,922 leaf nodes.\n- Level above the leaves: each node points to up to 256 children, so ceil(3,922 / 256) = 16 nodes.\n- Root: 16 children fit in one node, so 1 node.\n\nThat makes 3 levels: root, 16 internal nodes, 3,922 leaves. Searching costs 3 block reads, plus 1 to fetch the record.\n\nFor the worst case, assume nodes are only half full (a B+ tree guarantees at least half). Leaves hold about 128 keys, so about 7,813 leaves. Internal nodes hold at least 128 children, so ceil(7813 / 128) = 62 nodes, then ceil(62 / 128) = 1 root. That is still 3 levels. Even in the worst case, 1 million records need only 3 to 4 block accesses, which is why B+ trees are used for database indexes."
+    },
+    {
+     "author": "Ira Kapoor",
+     "afterMinutes": 245,
+     "accepted": false,
+     "rating": null,
+     "body": "Check your answer using the quick estimate height = ceil(log_p(N)). With p = 256 and N = 1,000,000: 256^2 = 65,536 and 256^3 = 16,777,216, so you need 3 levels. If you get something very different, recheck the order calculation.\n\nRemember that the answer depends on what the question defines. Some books count the pointer to the next leaf in the leaf size, others define order as the maximum number of children. If the question gives a formula or an example, follow that and write your assumption in one line. Marks are given for method, so the reasoning matters as much as the final number."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-07",
+   "subject": "DBMS",
+   "topic": "SQL Queries",
+   "difficulty": 1,
+   "author": "Dev Khanna",
+   "title": "My LEFT JOIN returns fewer rows than I expect",
+   "body": "I have two tables: students(id, name) with 40 rows and enrollments(student_id, course, grade). I wrote a LEFT JOIN so that every student appears, even if they have no enrollment:\n\n```sql\nSELECT s.name, e.course\nFROM students s\nLEFT JOIN enrollments e ON e.student_id = s.id\nWHERE e.course = 'DBMS';\n```\n\nI expected 40 rows, with NULL course for those not enrolled, but I only get the students enrolled in DBMS. It looks like an INNER JOIN. Why does the LEFT JOIN not keep the unmatched students?",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 316.9,
+   "solvedAfterMinutes": 2510,
+   "views": 8,
+   "answers": [
+    {
+     "author": "Zoya Khan",
+     "afterMinutes": 50,
+     "accepted": false,
+     "rating": null,
+     "body": "The cause is the WHERE clause. After the LEFT JOIN, students with no enrollment have e.course = NULL. The test NULL = 'DBMS' evaluates to UNKNOWN, and WHERE keeps only rows where the condition is TRUE. So all the unmatched rows disappear and you get inner join behaviour.\n\nMove the condition into ON, so it decides which enrollments match, not which rows survive:\n\n```sql\nSELECT s.name, e.course\nFROM students s\nLEFT JOIN enrollments e\n       ON e.student_id = s.id AND e.course = 'DBMS';\n```\n\nThis returns all 40 students. Those enrolled in DBMS show the course, and everyone else shows NULL."
+    }
+   ],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Think about what value `e.course` has for a student with no enrollment after the LEFT JOIN, and what happens when WHERE tests `NULL = 'DBMS'`. Which rows survive that test?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Write out the logical order: the join runs first and produces NULL-filled rows, then WHERE filters the result.\n- Evaluate the condition `e.course = 'DBMS'` on a NULL row: the answer is unknown, not true, so the row is dropped.\n- Decide where the course condition should live if you want to keep all students: in the ON clause of the join, not in WHERE.\n- Pitfall: any WHERE condition on the right-hand table of a LEFT JOIN quietly turns it into an inner join, unless it also checks for IS NULL."
+    }
+   ]
+  },
+  {
+   "key": "dbms-08",
+   "subject": "DBMS",
+   "topic": "ER Modelling",
+   "difficulty": 1,
+   "author": "Karan Gill",
+   "title": "Weak entity vs strong entity: how do I decide the key of a weak entity?",
+   "body": "In ER modelling I understand that a strong entity has its own primary key. For a weak entity, like DEPENDENT of EMPLOYEE, my notes say it has a partial key and depends on the owner. I do not understand how its primary key is finally formed when I convert the ER diagram to tables, and how I should draw it.",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 299.26,
+   "solvedAfterMinutes": 686,
+   "views": 13,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "A weak entity cannot be identified by its own attributes alone. Ask yourself: if two employees each have a dependent called \"Aman\", what extra piece of information tells the two Amans apart?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Identify the owner (strong) entity and the identifying relationship, drawn with a double diamond.\n- Pick the partial key (discriminator) of the weak entity, drawn with a dashed underline. It is unique only among dependents of the same owner.\n- Form the table: the primary key is the owner's primary key plus the partial key.\n- Add the owner's key as a foreign key, with delete cascade, because a weak entity cannot exist without its owner.\n- Pitfall: do not use the partial key alone as the primary key."
+    }
+   ]
+  },
+  {
+   "key": "dbms-09",
+   "subject": "DBMS",
+   "topic": "Transactions & Concurrency",
+   "difficulty": 3,
+   "author": "Dev Khanna",
+   "title": "Wait-die vs wound-wait: how do the two deadlock prevention schemes differ?",
+   "body": "Our notes list two deadlock prevention schemes based on timestamps: wait-die and wound-wait. I keep mixing them up. Both use the age of the transaction but I cannot remember who waits and who is aborted in each. Can someone give a clear example with two transactions T1 (older) and T2 (younger)? Also, do the aborted transactions restart with a new timestamp?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 35.08,
+   "solvedAfterMinutes": 0,
+   "views": 34,
+   "answers": [
+    {
+     "author": "Ananya Verma",
+     "afterMinutes": 146,
+     "accepted": false,
+     "rating": null,
+     "body": "Both schemes use the timestamp (a smaller timestamp means an older transaction). The difference is what happens when a transaction requests a lock held by another.\n\nWait-die (non-preemptive):\n- Older requests a lock held by younger: the older WAITS.\n- Younger requests a lock held by older: the younger DIES (aborts and restarts).\n\nWound-wait (preemptive):\n- Older requests a lock held by younger: the older WOUNDS the younger, which means the younger is aborted and rolled back, and the older takes the lock.\n- Younger requests a lock held by older: the younger WAITS.\n\nWith T1 older and T2 younger: if T1 wants an item T2 holds, wait-die makes T1 wait, wound-wait aborts T2. If T2 wants an item T1 holds, wait-die aborts T2, wound-wait makes T2 wait.\n\nNeither scheme can deadlock, because in wait-die only older ones wait for younger ones, and in wound-wait only younger ones wait for older ones, so a cycle of waits is impossible. Restarted transactions keep their ORIGINAL timestamp, otherwise a transaction could be aborted repeatedly and starve."
+    },
+    {
+     "author": "Ira Kapoor",
+     "afterMinutes": 361,
+     "accepted": false,
+     "rating": null,
+     "body": "Memory trick: in wait-die, the OLD one waits (old people wait calmly), the young one dies. In wound-wait, the old one wounds, the young one waits. The first word of the name tells you what the older transaction does.\n\nA quick example with timestamps TS(T1) = 5 and TS(T2) = 10, so T1 is older. If T2 holds a lock and T1 asks for it, wait-die lets T1 wait, while wound-wait aborts T2. If T1 holds it and T2 asks, wait-die aborts T2 and wound-wait lets T2 wait. Put this as a small table in the exam."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-10",
+   "subject": "DBMS",
+   "topic": "Relational Algebra",
+   "difficulty": 2,
+   "author": "Karan Gill",
+   "title": "Relational algebra for 'students who enrolled in ALL courses': I am confused about division",
+   "body": "Tutorial question: find the ids of students who have enrolled in every course offered. The relations are Enrolled(sid, cid) and Course(cid). My teacher says to use the division operator but the definition in the book is hard to follow. Can I solve it without division using only select, project, join, cross product and set difference? I would like to understand how it works.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 44.24,
+   "solvedAfterMinutes": 0,
+   "views": 32,
+   "answers": [
+    {
+     "author": "Simran Kaur",
+     "afterMinutes": 112,
+     "accepted": false,
+     "rating": null,
+     "body": "With division it is one line: pi_sid,cid(Enrolled) divided by pi_cid(Course). The result contains every sid that is paired with ALL cids of Course.\n\nWithout division, the idea is \"find the students who are missing at least one course, and remove them\":\n\n1. All possible (student, course) pairs: AllPairs = pi_sid(Enrolled) x pi_cid(Course).\n2. The pairs that actually exist are Enrolled. So the missing pairs are Missing = AllPairs - Enrolled.\n3. Students with at least one missing course: Bad = pi_sid(Missing).\n4. Answer = pi_sid(Enrolled) - Bad.\n\nWritten together: pi_sid(Enrolled) - pi_sid((pi_sid(Enrolled) x pi_cid(Course)) - Enrolled).\n\nQuick check: if student 1 is enrolled in {c1, c2} and Course has {c1, c2}, AllPairs has (1,c1), (1,c2), both exist in Enrolled, so Missing is empty and student 1 stays. If student 2 is enrolled only in c1, then (2,c2) is missing, so student 2 is in Bad and is removed."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-11",
+   "subject": "DBMS",
+   "topic": "Query Processing",
+   "difficulty": 2,
+   "author": "Dev Khanna",
+   "title": "Why does the optimizer choose a hash join here and not a nested loop join?",
+   "body": "I ran EXPLAIN on a query joining orders (about 2 million rows) with customers (about 50,000 rows) on customer_id. The plan shows a hash join, and our notes say nested loop join is the basic method. There is no index on orders.customer_id. Why did it choose a hash join, and when would nested loop be better? I would like to know the cost reasoning, not just the name.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 25.77,
+   "solvedAfterMinutes": 0,
+   "views": 12,
+   "answers": [
+    {
+     "author": "Zoya Khan",
+     "afterMinutes": 129,
+     "accepted": false,
+     "rating": null,
+     "body": "The optimizer compares estimated costs, usually measured in disk block accesses or row comparisons.\n\nLet B(R) and B(S) be the number of blocks, R the smaller table (customers) and S the larger (orders).\n- Block nested loop join: read R once, and for each block of R scan all of S. Cost is about B(R) + B(R) * B(S). With no index, it reads the large table once for every block of the small one, which is very expensive.\n- Hash join: build an in-memory hash table on the smaller table (50,000 customers fits in memory) and stream the large table past it once. Cost is about B(R) + B(S), so each table is read once.\n- Index nested loop would be good if orders.customer_id had an index and only a few customers were selected, since each lookup would be O(log n).\n\nSo with an equality join condition, no usable index and a build side that fits in memory, hash join wins by a wide margin.\n\nNested loop is better when one side is very small (say a few rows after a filter), when an index exists on the inner table, or when the join condition is not an equality (hash join needs equality). Merge join is attractive when both inputs are already sorted."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "dbms-12",
+   "subject": "DBMS",
+   "topic": "Normalization",
+   "difficulty": 1,
+   "author": "Aanya Sharma",
+   "title": "2NF vs 3NF: is a transitive dependency allowed in 2NF?",
+   "body": "I am trying to learn the normal forms in order. I understand 1NF (atomic values) and I think I get partial dependency for 2NF. But for 3NF my notes say \"no transitive dependency\". If a table is already in 2NF, can it still have a transitive dependency like student_id -> dept_id and dept_id -> dept_name? And if yes, how do I fix it? I would like a small example to understand the exact difference between the two.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 24.41,
+   "solvedAfterMinutes": 0,
+   "views": 27,
+   "answers": [],
+   "hints": []
+  },
+  {
+   "key": "dbms-13",
+   "subject": "DBMS",
+   "topic": "Recovery",
+   "difficulty": 2,
+   "author": "Karan Gill",
+   "title": "Undo/redo logging: what do I do for committed and uncommitted transactions after a crash?",
+   "body": "I am studying log based recovery with immediate database modification. After a crash, the log has records like <T1, start>, <T1, A, 100, 150>, <T2, start>, <T2, B, 20, 40>, <T1, commit>. The system restarts. I know there are redo and undo operations but I cannot remember which transaction needs which, and in what order the log is scanned. Also what is the purpose of a checkpoint here?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 9.79,
+   "solvedAfterMinutes": 0,
+   "views": 28,
+   "answers": [],
+   "hints": []
+  },
+  {
+   "key": "os-01",
+   "subject": "OS",
+   "topic": "Synchronization",
+   "difficulty": 3,
+   "author": "Yash Arora",
+   "title": "Why does my producer-consumer code deadlock with two semaphores?",
+   "body": "For the OS lab we have to implement bounded buffer producer-consumer using semaphores. I used three semaphores: mutex = 1, empty = N and full = 0. My program works for a few items and then both threads just hang forever. Sir said in class that the order of wait calls matters but I did not catch why.\n\nThis is my producer loop:\n\n```c\nwhile (1) {\n    item = produce();\n    wait(mutex);\n    wait(empty);\n    buffer[in] = item;\n    in = (in + 1) % N;\n    signal(mutex);\n    signal(full);\n}\n```\n\nThe consumer does wait(full), wait(mutex), takes the item, then signal(mutex), signal(empty). Where is the deadlock?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 17.31,
+   "solvedAfterMinutes": 221,
+   "views": 26,
+   "answers": [
+    {
+     "author": "Meher Bajwa",
+     "afterMinutes": 138,
+     "accepted": true,
+     "rating": 5,
+     "body": "The deadlock is in the order of the two wait calls in the producer. You take the mutex first and then wait for an empty slot.\n\nWalk through what happens when the buffer is full (empty = 0):\n1. The producer does wait(mutex) and gets the lock.\n2. It does wait(empty) and blocks, because there is no free slot. It is still holding the mutex.\n3. The consumer wants to remove an item. It does wait(full), which succeeds, then wait(mutex), which blocks because the producer holds it.\n4. The producer waits for the consumer to free a slot, and the consumer waits for the producer to release the mutex. Nobody can move. Deadlock.\n\nThe rule: wait on the counting semaphore (the resource) first, and take the mutex last and hold it for the shortest time.\n\n```c\n// producer\nwait(empty);      // is there a free slot?\nwait(mutex);      // now lock the buffer\nbuffer[in] = item; in = (in + 1) % N;\nsignal(mutex);\nsignal(full);\n\n// consumer\nwait(full);\nwait(mutex);\nitem = buffer[out]; out = (out + 1) % N;\nsignal(mutex);\nsignal(empty);\n```\n\nThe order of the signal calls does not cause deadlock, but the wait order must be empty then mutex for the producer and full then mutex for the consumer."
+    },
+    {
+     "author": "Simran Kaur",
+     "afterMinutes": 325,
+     "accepted": false,
+     "rating": null,
+     "body": "A good way to catch this in future: draw a table of who holds what and who waits for what. If you find a circle (producer holds mutex and wants empty, consumer holds nothing but wants mutex while the producer waits for the consumer), it is a deadlock. The fix is always to break the circle by acquiring locks in a consistent order.\n\nAlso test with several producers and consumers, not just one of each, and with a tiny buffer size such as N = 1. Deadlocks that stay hidden with one producer often appear immediately when the buffer is small, and it is a good habit before the lab evaluation."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "os-02",
+   "subject": "OS",
+   "topic": "Paging & Virtual Memory",
+   "difficulty": 2,
+   "author": "Pooja Saini",
+   "title": "Effective access time with a TLB: 90% hit ratio, 20 ns TLB, 100 ns memory",
+   "body": "Numerical from the sheet: a paging system uses a TLB. TLB access time is 20 ns, main memory access time is 100 ns and the TLB hit ratio is 90 percent. Find the effective memory access time (EAT).\n\nThe book answer is 130 ns but I get 118 ns. I calculated 0.9 x 20 + 0.1 x 100 + 100. I think I am missing something about what happens on a miss. How many memory accesses are needed when the page is not in the TLB?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 175.65,
+   "solvedAfterMinutes": 679,
+   "views": 91,
+   "answers": [
+    {
+     "author": "Ananya Verma",
+     "afterMinutes": 125,
+     "accepted": true,
+     "rating": 5,
+     "body": "You need to count the TLB lookup on EVERY access, and the page table access on a miss.\n\n- TLB hit (probability 0.9): you search the TLB (20 ns) and then access the data in memory (100 ns). Total = 20 + 100 = 120 ns.\n- TLB miss (probability 0.1): you search the TLB (20 ns), find nothing, read the page table entry from memory (100 ns), then access the data (100 ns). Total = 20 + 100 + 100 = 220 ns.\n\nEAT = 0.9 x 120 + 0.1 x 220 = 108 + 22 = 130 ns.\n\nYour calculation added the TLB time only on the hit part and did not add the extra memory access for the page table on a miss. The common formula is:\n\nEAT = h x (t_tlb + t_mem) + (1 - h) x (t_tlb + 2 x t_mem)\n\nSome books assume the TLB lookup overlaps with something else or ignore it; the problem statement usually tells you. With a single-level page table a miss costs two memory accesses. With a two-level table it would cost three, and the EAT would become 0.9 x 120 + 0.1 x 320 = 140 ns."
+    },
+    {
+     "author": "Meher Bajwa",
+     "afterMinutes": 272,
+     "accepted": false,
+     "rating": null,
+     "body": "Sanity check: the answer must lie between the best case (120 ns, all hits) and the worst case (220 ns, all misses). 130 is close to 120 because 90% of accesses are fast. If your answer falls outside that range, there is an error.\n\nFor multi-level paging or a TLB with different hit and miss costs, always draw the two cases as separate lines first (hit path and miss path), compute each total and only then weight them by the probabilities. This habit avoids missing the extra page-table access, which is the most common reason for a wrong EAT."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "os-03",
+   "subject": "OS",
+   "topic": "CPU Scheduling",
+   "difficulty": 2,
+   "author": "Yash Arora",
+   "title": "Round robin with quantum 2: my average waiting time differs from the book",
+   "body": "Problem: processes P1, P2, P3, P4 arrive at times 0, 1, 2, 3 with burst times 5, 3, 1, 2. Scheduling is round robin with time quantum 2. Find the average waiting time.\n\nI drew a Gantt chart but I am not sure where to put a process that arrives while another one is running. I put P2 behind P1 in the queue after P1's first slice, and then I lost track. The answer key says 4.5 but I get 5.25. Where do newly arrived processes go?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 234.84,
+   "solvedAfterMinutes": 474,
+   "views": 37,
+   "answers": [
+    {
+     "author": "Simran Kaur",
+     "afterMinutes": 75,
+     "accepted": true,
+     "rating": 4,
+     "body": "Rule used in most textbooks: a process that arrives during a time slice enters the ready queue BEFORE the preempted process is placed back at the tail.\n\nSimulate (quantum 2):\n- t=0: queue [P1]. P1 runs 0-2 (3 left). During this, P2 (t=1) and P3 (t=2) arrive, so the queue is [P2, P3] and then P1 goes to the back: [P2, P3, P1].\n- P2 runs 2-4 (1 left). P4 arrives at t=3, so the queue is [P3, P1, P4, P2].\n- P3 runs 4-5 and finishes (burst 1).\n- P1 runs 5-7 (1 left). Queue: [P4, P2, P1].\n- P4 runs 7-9 and finishes.\n- P2 runs 9-10 and finishes.\n- P1 runs 10-11 and finishes.\n\nGantt: P1(0-2) P2(2-4) P3(4-5) P1(5-7) P4(7-9) P2(9-10) P1(10-11).\n\nCompletion times: P1=11, P2=10, P3=5, P4=9. Turnaround = completion - arrival: 11, 9, 3, 6. Waiting = turnaround - burst: P1 = 6, P2 = 6, P3 = 2, P4 = 4.\n\nAverage waiting time = (6 + 6 + 2 + 4) / 4 = 4.5. That matches the key.\n\nYour 5.25 likely comes from placing the preempted process before the newly arrived ones. If your course uses the opposite convention, say so in the answer."
+    },
+    {
+     "author": "Priya Nair",
+     "afterMinutes": 117,
+     "accepted": false,
+     "rating": null,
+     "body": "Always state the tie-breaking rule at the top of the answer in exams, because the result changes with it. Also verify with the identity: sum of waiting times = sum of turnaround times - sum of burst times = (11 + 9 + 3 + 6) - (5 + 3 + 1 + 2) = 29 - 11 = 18, which gives 4.5 on average.\n\nIf a process arrives exactly when a quantum ends, the usual convention is the same: the new arrival goes into the queue first, then the preempted process. State this convention in your answer."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "os-04",
+   "subject": "OS",
+   "topic": "Deadlocks",
+   "difficulty": 2,
+   "author": "Pooja Saini",
+   "title": "Banker's algorithm: how do I find a safe sequence step by step?",
+   "body": "I have the standard example: 5 processes P0 to P4 and 3 resource types A, B, C with total instances 10, 5, 7. Allocation: P0 (0,1,0), P1 (2,0,0), P2 (3,0,2), P3 (2,1,1), P4 (0,0,2). Max: P0 (7,5,3), P1 (3,2,2), P2 (9,0,2), P3 (2,2,2), P4 (4,3,3). Available is (3,3,2).\n\nIs the system in a safe state? I know the steps (Need = Max - Allocation, then Work and Finish arrays) but when I try to pick processes I get confused about which to choose first and whether the order I pick changes the answer.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 21.12,
+   "solvedAfterMinutes": 567,
+   "views": 89,
+   "answers": [
+    {
+     "author": "Meher Bajwa",
+     "afterMinutes": 62,
+     "accepted": true,
+     "rating": 5,
+     "body": "Need = Max - Allocation:\nP0 (7,4,3), P1 (1,2,2), P2 (6,0,0), P3 (0,1,1), P4 (4,3,1).\n\nStart with Work = Available = (3,3,2) and Finish = false for all. Repeatedly pick any unfinished process whose Need <= Work. When it finishes, add its Allocation back to Work.\n\n1. P0 (7,4,3) > (3,3,2). Not possible. P1 (1,2,2) <= (3,3,2). Pick P1. Work = (3,3,2) + (2,0,0) = (5,3,2).\n2. P3 (0,1,1) <= (5,3,2). Pick P3. Work = (5,3,2) + (2,1,1) = (7,4,3).\n3. P0 (7,4,3) <= (7,4,3). Pick P0. Work = (7,4,3) + (0,1,0) = (7,5,3).\n4. P2 (6,0,0) <= (7,5,3). Pick P2. Work = (7,5,3) + (3,0,2) = (10,5,5).\n5. P4 (4,3,1) <= (10,5,5). Pick P4. Work = (10,5,5) + (0,0,2) = (10,5,7).\n\nAll processes finished, so the state is SAFE with safe sequence <P1, P3, P0, P2, P4>.\n\nThe order you pick can differ. <P1, P3, P4, P0, P2> is also a safe sequence for this data. Different orders are possible, but if ANY complete order exists the state is safe. At the end Work must equal the total resources (10,5,7), which is a good check on your arithmetic."
+    },
+    {
+     "author": "Ananya Verma",
+     "afterMinutes": 152,
+     "accepted": false,
+     "rating": null,
+     "body": "If the question then asks \"can a request from P1 for (1,0,2) be granted?\", check three things in order: Request <= Need, Request <= Available, then pretend to grant it (Available - Request, Allocation + Request, Need - Request) and run the safety algorithm again. Grant only if the new state is still safe.\n\nIn the exam, show a table with the columns Process, Need, Work before, Work after and Finish. It makes the safe sequence easy to verify, and examiners can award method marks even if one arithmetic slip happens. Also state that the safe sequence is not unique."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "os-05",
+   "subject": "OS",
+   "topic": "Processes & Threads",
+   "difficulty": 1,
+   "author": "Aanya Sharma",
+   "title": "Difference between a process and a thread? Can two threads share the stack?",
+   "body": "The definitions in my notes look the same to me: \"a thread is a lightweight process\". In the viva I got asked what two threads of the same process share and what they do not share. I said everything is shared and the examiner did not look happy. Can someone clearly list what is shared and what is private? I am especially confused about the stack and the registers.",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 16.19,
+   "solvedAfterMinutes": 222,
+   "views": 70,
+   "answers": [
+    {
+     "author": "Priya Nair",
+     "afterMinutes": 58,
+     "accepted": false,
+     "rating": null,
+     "body": "A process is a program in execution with its own address space. A thread is a unit of execution inside a process.\n\nThreads of the same process share: the code (text) section, global and static data, the heap, open files and other OS resources such as signal handlers.\n\nEach thread has its own: stack (local variables and return addresses), program counter, CPU register values and a thread id. This is why two threads can run the same function at the same time without overwriting each other's local variables.\n\nSo the answer to your question is that threads do NOT share the stack, although technically all stacks live in the same address space, so a buggy thread could access another's stack through a pointer.\n\nContext switching between threads of one process is cheaper than between processes because no address-space switch is needed. The price is that shared heap and globals need locks."
+    }
+   ],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Imagine two threads running the same function at the same time in one program. If they both used the same stack, what would go wrong with their local variables and return addresses?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Make two columns: what lives in the process (shared by all its threads) and what each thread must have on its own.\n- Think about the memory regions: code, global data, heap, open files on one side; stack, program counter, registers on the other.\n- Explain why the private items must be separate: each thread has its own execution state.\n- Pitfall: threads share the heap, so shared data needs synchronization."
+    }
+   ]
+  },
+  {
+   "key": "os-06",
+   "subject": "OS",
+   "topic": "Memory Management",
+   "difficulty": 1,
+   "author": "Pooja Saini",
+   "title": "Internal vs external fragmentation: why does paging remove external fragmentation?",
+   "body": "I can recite the definitions of internal and external fragmentation but I mix up which technique causes which. In the exam they ask \"why does paging remove external fragmentation but still have internal fragmentation?\" and I cannot explain it properly. Please explain with a small example using numbers.\n\nI also get confused because both terms sound similar, and my teacher used a figure with coloured boxes that I could not copy properly. The exam is on Thursday and this is a 5 mark question.",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 266.18,
+   "solvedAfterMinutes": 723,
+   "views": 12,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Ask which of the two wastes memory INSIDE an allocated block, and which wastes memory BETWEEN allocated blocks. Then ask what size every allocation is in paging."
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Define the two terms by where the waste sits: inside an allocation versus in gaps between allocations.\n- Take page size 4 KB and a process of 10 KB; count how many pages it needs and how much of the last page is unused.\n- Explain why any free frame can serve any page, so scattered free frames are never \"too small\".\n- Pitfall: the average internal waste is about half a page per process, so smaller pages waste less but need bigger page tables."
+    }
+   ]
+  },
+  {
+   "key": "os-07",
+   "subject": "OS",
+   "topic": "Disk Scheduling",
+   "difficulty": 2,
+   "author": "Yash Arora",
+   "title": "SCAN vs C-SCAN: do I count the jump back in the total head movement?",
+   "body": "Disk has 200 cylinders (0 to 199). Request queue: 98, 183, 37, 122, 14, 124, 65, 67 and the head is at 53. I need to find the total head movement for SCAN and C-SCAN.\n\nFor SCAN, I assume the head goes towards 0 first. I got 236 for SCAN, which matches the book. For C-SCAN moving towards higher cylinders I got 382 including the jump from 199 to 0, but my friend says 183 and the book shows both versions in different places. Which one is correct and does the head go to the very end of the disk?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 26.73,
+   "solvedAfterMinutes": 0,
+   "views": 4,
+   "answers": [
+    {
+     "author": "Meher Bajwa",
+     "afterMinutes": 104,
+     "accepted": false,
+     "rating": null,
+     "body": "Both of your numbers are right; they answer slightly different questions.\n\nSCAN (towards 0 first), the head must go to the end of the disk (cylinder 0) before reversing:\n53 -> 37 -> 14 -> 0 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183.\nMovement = (53 - 0) + (183 - 0) = 53 + 183 = 236.\n\nC-SCAN (towards higher cylinders first): service requests going up, continue to the last cylinder 199, jump back to 0, then service the rest going up.\n53 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183 -> 199 -> 0 -> 14 -> 37.\n- Going up: (199 - 53) = 146.\n- The return jump: 199 (from 199 to 0).\n- Going up again: 37.\nTotal = 146 + 199 + 37 = 382 if the return jump is counted.\n\nMany textbooks do not count the return jump because the head moves back without serving requests and it is considered fast. Then the total is 146 + 37 = 183.\n\nSo always read the question: if it says \"total head movement\", state your assumption. In an exam write both: \"382 including the return seek, 183 excluding it\". Also note that the textbook versions that stop at the last request instead of the disk end are LOOK and C-LOOK, which give different totals."
+    },
+    {
+     "author": "Simran Kaur",
+     "afterMinutes": 316,
+     "accepted": false,
+     "rating": null,
+     "body": "For comparison, FCFS on the same queue gives 640 cylinders of head movement. SCAN with 236 and C-SCAN (183 without the jump) are far better. The reason C-SCAN is preferred in practice is that it gives more uniform waiting times, because requests at the edges are not served twice as often as those in the middle.\n\nAs a quick comparison for revision: FCFS gives 640, SCAN gives 236 and C-SCAN gives 382 including the return jump. SSTF would serve 65, 67, 37, 14, 98, 122, 124, 183 for a total of 236 as well. The numbers show why scheduling matters more as the queue grows."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "os-08",
+   "subject": "OS",
+   "topic": "File Systems",
+   "difficulty": 3,
+   "author": "Yash Arora",
+   "title": "inode: how many blocks can a file have with 12 direct, 1 single and 1 double indirect pointer?",
+   "body": "Unix style inode question: block size is 4 KB, a disk block address is 4 bytes. The inode has 12 direct pointers, 1 single indirect and 1 double indirect pointer. What is the maximum file size?\n\nI know a single indirect block points to a block full of addresses. But I do not know how many addresses fit in one block and how the double indirect counts. I wrote 12 + 1 + 1 = 14 blocks which is obviously wrong. How do I get the real number?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 14.16,
+   "solvedAfterMinutes": 0,
+   "views": 23,
+   "answers": [
+    {
+     "author": "Ananya Verma",
+     "afterMinutes": 133,
+     "accepted": false,
+     "rating": null,
+     "body": "Count how many data blocks each kind of pointer can reach.\n\nA block holds 4096 / 4 = 1024 addresses.\n\n- 12 direct pointers: 12 data blocks.\n- 1 single indirect pointer: points to one block holding 1024 addresses, so 1024 data blocks.\n- 1 double indirect pointer: points to a block of 1024 addresses, each of which points to a block of 1024 addresses, so 1024 x 1024 = 1,048,576 data blocks.\n\nTotal data blocks = 12 + 1024 + 1,048,576 = 1,049,612.\n\nMaximum file size = 1,049,612 x 4 KB = 4,198,448 KB, which is about 4.004 GB. In bytes that is 4,299,210,752.\n\nThe double indirect pointer dominates, so a quick estimate is 1024^2 blocks x 4 KB = 4 GB. If a triple indirect pointer existed, you would add 1024^3 blocks, which is 4 TB more."
+    },
+    {
+     "author": "Meher Bajwa",
+     "afterMinutes": 152,
+     "accepted": false,
+     "rating": null,
+     "body": "A related detail for the viva: the index blocks themselves also take space on disk. For a file of maximum size you would use 1 single indirect block, 1 double indirect first-level block and 1024 second-level blocks. They are overhead and are not counted in the maximum file size, but they matter if the question asks for disk blocks used.\n\nSo for the same inode layout, a bigger block size increases the maximum file size very quickly, because the addresses per block grow and the double indirect term grows with the square of that number. With 8 KB blocks and 4-byte pointers you get 2048 addresses per block, and the double indirect part alone covers 2048 squared blocks."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "os-09",
+   "subject": "OS",
+   "topic": "Synchronization",
+   "difficulty": 2,
+   "author": "Pooja Saini",
+   "title": "Peterson's solution: why is the turn variable needed if we already have flags?",
+   "body": "Peterson's algorithm for two processes uses flag[2] and turn. Each process sets its flag to true to show it wants to enter, and then sets turn to the other process, and waits while the other's flag is true and it is the other's turn. I understand the code but not why the turn variable is needed. If both flags are enough to show intent, why do we need turn as well? What breaks if I remove it?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 15.69,
+   "solvedAfterMinutes": 0,
+   "views": 13,
+   "answers": [
+    {
+     "author": "Priya Nair",
+     "afterMinutes": 13,
+     "accepted": false,
+     "rating": null,
+     "body": "Each variable fixes a different problem.\n\nWithout turn (flags only): each process sets its flag and then waits while the other's flag is true. If both set their flags at the same time, each sees the other's flag and waits forever. That is a deadlock. Flags show who wants to enter but cannot break a tie.\n\nWithout flags (turn only): the processes are forced to alternate. P0 can enter only when turn = 0 and P1 only when turn = 1. If P1 does not want to enter at all, P0 waits for its turn forever after one entry. That violates progress, because a process outside its critical section blocks another.\n\nWith both: a process says \"I want in\" (flag) and then politely says \"you go first\" (turn = other). If both do this at the same moment, the value of turn is written last by one of them, and that decides who goes: the process that wrote turn last is the one that waits. The other sees either the flag false or turn pointing to itself and enters. So we get:\n- Mutual exclusion: both cannot pass the wait condition together.\n- Progress: no deadlock, and a process that does not want in does not block the other.\n- Bounded waiting: after P0 leaves, it must set turn to P1 if it comes again, so it waits at most one turn."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "os-10",
+   "subject": "OS",
+   "topic": "CPU Scheduling",
+   "difficulty": 2,
+   "author": "Karan Gill",
+   "title": "Preemptive SJF (SRTF) Gantt chart with arrival times: where am I going wrong?",
+   "body": "Processes: P1 (arrival 0, burst 8), P2 (arrival 1, burst 4), P3 (arrival 2, burst 9), P4 (arrival 3, burst 5). Using shortest remaining time first, I get the order P1, P2, P4, P1, P3. The textbook answer for average waiting time is 6.5 and mine comes out different.\n\nI am not sure when to compare remaining time and when a running process can be preempted. Do I check at every time unit or only when a process arrives? Can someone show how the decisions are made?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 46.09,
+   "solvedAfterMinutes": 0,
+   "views": 39,
+   "answers": [],
+   "hints": []
+  },
+  {
+   "key": "cn-01",
+   "subject": "CN",
+   "topic": "Error Control & CRC",
+   "difficulty": 2,
+   "author": "Harsh Vardhan",
+   "title": "CRC remainder for message 1101011011 with generator 10011",
+   "body": "Tutorial problem: find the CRC for the message 1101011011 using the generator polynomial x^4 + x + 1 (bits 10011). I know I must append zeros and divide using XOR but my long division keeps going wrong. Every time I get a different remainder. The key says 1110 and the transmitted frame should be 11010110111110.\n\nCan someone show the division step by step and also tell me how the receiver checks the frame?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 175.4,
+   "solvedAfterMinutes": 643,
+   "views": 77,
+   "answers": [
+    {
+     "author": "Priya Nair",
+     "afterMinutes": 138,
+     "accepted": true,
+     "rating": 5,
+     "body": "The generator 10011 has degree 4, so append 4 zeros to the message:\n\nDividend = 1101011011 0000 = 11010110110000.\n\nBinary (mod 2) division uses XOR with no borrows. At each step, if the leading bit of the current window is 1, XOR the generator under it; if it is 0, just shift. Running the full division gives these intermediate values (after each XOR with 10011):\n\n```\n11010110110000\n10011                 (XOR at position 0)\n--------------\n01001110110000\n 10011                (XOR at position 1)\n --------------\n00000010110000\n      10011           (XOR at position 6)\n      --------------\n00000000101000\n        10011         (XOR at position 8)\n        --------------\n00000000001110\n```\n\nThe last 4 bits are the remainder: 1110.\n\nTransmitted frame = message followed by the remainder = 1101011011 1110 = 11010110111110.\n\nReceiver check: divide the whole received frame (11010110111110) by 10011 using the same XOR division. If the remainder is 0000, the frame is accepted as error free; any non-zero remainder means an error was detected.\n\nCRC detects all single-bit errors, all burst errors of length up to 4 (the degree of the generator) and any odd number of bit errors when the generator has a factor (x + 1). It cannot detect errors that happen to be a multiple of the generator."
+    },
+    {
+     "author": "Meher Bajwa",
+     "afterMinutes": 302,
+     "accepted": false,
+     "rating": null,
+     "body": "A mistake many people make is dividing the message without appending the zeros first, or appending the wrong number of zeros. The number of zeros is always one less than the number of bits in the generator. Another trick for the exam: write the dividend and XOR in columns exactly as above, so you do not lose your position.\n\nIt is also worth practising the polynomial form. The generator x^4 + x + 1 is 10011, and the message here, 1101011011, is x^9 + x^8 + x^6 + x^4 + x^3 + x + 1. Being able to convert between the two forms is often asked as a separate part of the question, and mistakes there lead to a wrong divisor."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "cn-02",
+   "subject": "CN",
+   "topic": "IP Addressing & Subnetting",
+   "difficulty": 2,
+   "author": "Siddharth Jain",
+   "title": "Subnetting 192.168.10.0/24 into 6 subnets: new mask and the range of each subnet",
+   "body": "Question: a company has the network 192.168.10.0/24 and needs at least 6 subnets. Find the new subnet mask, the number of hosts per subnet and the network address, broadcast address and usable range for each subnet. I know the formula 2^n >= subnets but I am confused about how many bits to borrow and how to list the subnets. Also, are the first and last subnets usable? Our teacher said something about subnet zero.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 16.96,
+   "solvedAfterMinutes": 321,
+   "views": 27,
+   "answers": [
+    {
+     "author": "Priya Nair",
+     "afterMinutes": 18,
+     "accepted": true,
+     "rating": 5,
+     "body": "Borrow bits from the host part. You need at least 6 subnets, and 2^2 = 4 is too few, 2^3 = 8 is enough. So borrow 3 bits.\n\n- New prefix: /24 + 3 = /27.\n- New mask: 255.255.255.224 (the last octet is 11100000 = 224).\n- Host bits left: 5, so each subnet has 2^5 = 32 addresses and 32 - 2 = 30 usable hosts.\n- Block size = 256 - 224 = 32.\n\nThe subnets (network - first host - last host - broadcast):\n1. 192.168.10.0   - .1   to .30  - .31\n2. 192.168.10.32  - .33  to .62  - .63\n3. 192.168.10.64  - .65  to .94  - .95\n4. 192.168.10.96  - .97  to .126 - .127\n5. 192.168.10.128 - .129 to .158 - .159\n6. 192.168.10.160 - .161 to .190 - .191\n\nThere are 8 subnets in total; the last two (.192 and .224) are spare.\n\nAbout subnet zero: older classful rules did not allow the first (all zeros) and the last (all ones) subnet. Modern classless routing (CIDR) allows them, so with CIDR you can use all 8. If the question says \"classful\" or \"subnet zero not allowed\", you would need 2^3 - 2 = 6 usable subnets, which is exactly why this question asks for 6."
+    },
+    {
+     "author": "Vikram Sandhu",
+     "afterMinutes": 69,
+     "accepted": false,
+     "rating": null,
+     "body": "Fast method to avoid mistakes: the interesting octet value is 224, so the block size is 256 - 224 = 32. Subnets start at multiples of 32. The broadcast is always the next network address minus 1. The usable range is network + 1 to broadcast - 1. Do this and you never need to convert to binary in the exam.\n\nTo verify your table, check that each broadcast address plus one equals the next network address, for example .31 + 1 = .32. If that holds for all rows, your block size and ranges are right, and the host count of 30 per subnet follows from 2^5 - 2."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "cn-03",
+   "subject": "CN",
+   "topic": "TCP & Congestion Control",
+   "difficulty": 3,
+   "author": "Harsh Vardhan",
+   "title": "Slow start vs congestion avoidance: how does cwnd change, and what happens on a timeout?",
+   "body": "I am trying to draw the congestion window graph for TCP. Initial ssthresh is 16 MSS and cwnd starts at 1 MSS. I know cwnd doubles each RTT in slow start and then increases linearly. But I do not understand when exactly slow start ends, and what happens to cwnd and ssthresh when a timeout occurs at cwnd = 20. Is it different for a triple duplicate ACK?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 312.67,
+   "solvedAfterMinutes": 694,
+   "views": 40,
+   "answers": [
+    {
+     "author": "Vikram Sandhu",
+     "afterMinutes": 122,
+     "accepted": true,
+     "rating": 5,
+     "body": "Slow start: cwnd starts at 1 MSS and doubles every RTT (it increases by 1 MSS for every ACK received): 1, 2, 4, 8, 16. When cwnd reaches ssthresh (16), slow start ends.\n\nCongestion avoidance: cwnd increases by 1 MSS per RTT (additive increase): 17, 18, 19, 20, ...\n\nTimeout at cwnd = 20 (this is a strong signal of congestion):\n- ssthresh = cwnd / 2 = 10.\n- cwnd = 1 MSS.\n- Start slow start again: 1, 2, 4, 8, then 10 (it reaches ssthresh and switches to linear growth): 11, 12, ...\n\nTriple duplicate ACK (a mild signal, because later segments are still getting through):\n- TCP Tahoe treats it like a timeout: ssthresh = 10, cwnd = 1.\n- TCP Reno uses fast retransmit and fast recovery: ssthresh = cwnd / 2 = 10, cwnd = ssthresh (+ 3 MSS during recovery) and continues in congestion avoidance, without dropping to 1.\n\nSo a timeout always resets cwnd to 1, but with Reno a triple duplicate ACK only halves it. This sawtooth, with additive increase and multiplicative decrease, is what AIMD means."
+    },
+    {
+     "author": "Priya Nair",
+     "afterMinutes": 298,
+     "accepted": false,
+     "rating": null,
+     "body": "Plot tip for the exam: x-axis in RTTs, y-axis cwnd in MSS. Label the ssthresh line, mark the slow start region as exponential, the congestion avoidance region as a straight line, and the timeout as a vertical drop to 1. Examiners look for the new ssthresh being half of the cwnd at the time of loss, not half of the old ssthresh.\n\nAlso write down which TCP variant the question assumes. Tahoe and Reno differ only for triple duplicate ACKs, and many exam answers lose marks by not saying which version they used. When in doubt, mention both behaviours in one line."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "cn-04",
+   "subject": "CN",
+   "topic": "Routing Algorithms",
+   "difficulty": 2,
+   "author": "Yash Arora",
+   "title": "Distance vector count-to-infinity: why does it happen and how does split horizon fix it?",
+   "body": "Our notes on distance vector routing mention the count-to-infinity problem. I read the example with three routers A - B - C in a line, where the link between B and C goes down, but I could not follow why the costs keep increasing. What exactly is exchanged and why do B and A keep updating? And how does split horizon help? Does it solve every case?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 148.02,
+   "solvedAfterMinutes": 624,
+   "views": 61,
+   "answers": [
+    {
+     "author": "Meher Bajwa",
+     "afterMinutes": 163,
+     "accepted": true,
+     "rating": 5,
+     "body": "Setup: A - B - C in a line, all link costs 1. A's table says C is at distance 2 (via B), and B's table says C is at distance 1.\n\nThe B-C link fails. B no longer reaches C directly, but it hears from A that \"C is at distance 2\". B cannot know that A's route to C goes through B itself, so B believes A and sets C = 3 (via A).\n- B tells A: \"C is at distance 3\". A updates its route: C = 4 (via B).\n- A tells B: C = 4, so B updates C = 5.\n- This continues: 6, 7, 8, ... each update adds 1. The costs count upward toward infinity (RIP defines infinity as 16), and packets for C loop between A and B meanwhile.\n\nSplit horizon: a router does not advertise a route back out of the interface from which it learned it. A learned C through B, so A does not tell B about C. After the failure, B hears nothing about C from A, so it marks C unreachable. The loop between two routers is prevented. With poison reverse A would send B the route \"C = infinity\", which makes this even faster.\n\nIt does not solve everything. In topologies with three or more routers in a loop, the wrong route can still travel around the loop. Other fixes are hold-down timers and triggered updates, and link-state protocols such as OSPF avoid the problem altogether."
+    },
+    {
+     "author": "Vikram Sandhu",
+     "afterMinutes": 280,
+     "accepted": false,
+     "rating": null,
+     "body": "The key sentence for the exam: distance vector routers only know what their neighbours tell them, not the path behind the number, so they cannot detect that a neighbour's route goes through themselves. Bad news travels slowly (one hop per update) while good news travels fast.\n\nA numerical example helps in the exam: with RIP the maximum metric is 16, so the count stops when the cost reaches 16 (unreachable). That is why RIP supports networks of at most 15 hops. The count takes many update rounds, each 30 seconds apart, so the loop lasts minutes, which is why triggered updates and hold-down timers were added."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "cn-05",
+   "subject": "CN",
+   "topic": "OSI & TCP/IP Models",
+   "difficulty": 1,
+   "author": "Kabir Sethi",
+   "title": "Which OSI layer does a router work at? My book says 3 but my notes say 2 and 3",
+   "body": "I am a first year student and I am confused about the networking basics. A router forwards packets using IP addresses, so I wrote layer 3. But in the class notes there is a line saying a router operates at layers 1, 2 and 3. What is correct for an MCQ? And similarly, what is the layer for a switch and a hub?",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 225.43,
+   "solvedAfterMinutes": 527,
+   "views": 92,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Ask which layer's header the router reads and changes in order to decide where a packet goes next. What does it do with the layer 2 header when the packet arrives and when it leaves?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Name the device's main job: forwarding decisions based on which address (MAC or IP).\n- Map that address to its layer (data link versus network) for router, switch and hub.\n- Explain that every device also has a physical interface and a data link header, which is why notes mention layers 1 and 2.\n- For MCQs, give the layer of the main forwarding decision.\n- Pitfall: a layer 3 switch is a switch that can also route."
+    }
+   ]
+  },
+  {
+   "key": "cn-06",
+   "subject": "CN",
+   "topic": "DNS & HTTP",
+   "difficulty": 1,
+   "author": "Siddharth Jain",
+   "title": "HTTP GET vs POST: is POST really more secure?",
+   "body": "In the web programming lab our teacher said \"use POST for passwords because it is more secure than GET\". But my friend says both can be read by anyone on the same Wi-Fi. Which one is right? What is actually the difference between GET and POST and which one is safer for login forms?\n\nI am a bit worried because this might come in the viva, and I do not want to give a half correct answer.",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 202.57,
+   "solvedAfterMinutes": 1377,
+   "views": 48,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Think about where the data travels in each method (the URL or the body) and who can see a URL later (browser history, server logs, the address bar). Then think separately about who can see data while it travels over the network."
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Compare GET and POST on three things: where the data sits, whether it is cached or bookmarked, and whether it is idempotent.\n- Separate \"hidden from casual viewers\" from \"protected from an attacker on the network\".\n- Decide what actually protects the data in transit (TLS, which gives HTTPS).\n- Pitfall: POST alone does not encrypt anything."
+    }
+   ]
+  },
+  {
+   "key": "cn-07",
+   "subject": "CN",
+   "topic": "MAC & Ethernet",
+   "difficulty": 2,
+   "author": "Yash Arora",
+   "title": "CSMA/CD: how is the minimum frame size related to the propagation delay?",
+   "body": "Question: a 10 Mbps Ethernet LAN has a maximum length such that the round trip propagation time is 51.2 microseconds. Why is the minimum frame size 64 bytes? I understand collision detection in words but I cannot link it to the formula Tt >= 2 x Tp. What does the sender need to be doing for the whole time? And what changes if the bandwidth becomes 100 Mbps?",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 28.4,
+   "solvedAfterMinutes": 0,
+   "views": 24,
+   "answers": [
+    {
+     "author": "Priya Nair",
+     "afterMinutes": 108,
+     "accepted": false,
+     "rating": null,
+     "body": "In CSMA/CD the sender must still be transmitting when the collision signal reaches it. Otherwise it will think the frame was sent successfully and never detect the collision.\n\nWorst case: station A is at one end and station B at the other, with propagation delay Tp between them. A starts sending. Just before the signal reaches B (almost Tp later), B starts sending and immediately sees a collision. B's jam signal then needs another Tp to travel back to A. So A learns about the collision after about 2 x Tp. A must keep transmitting until then, so the transmission time of the frame must be at least the round-trip time:\n\nTt >= 2 x Tp, which means L / B >= 2 x Tp, so L_min = 2 x Tp x B.\n\nWith B = 10 Mbps and 2 x Tp = 51.2 microseconds:\nL_min = 10 x 10^6 x 51.2 x 10^-6 = 512 bits = 64 bytes.\n\nThat 51.2 microseconds is the slot time of classic Ethernet.\n\nAt 100 Mbps with the same minimum frame of 64 bytes, the frame is sent 10 times faster, so the network diameter must shrink to a tenth (about 205 m for Fast Ethernet). Alternatively, you keep the same diameter and increase the minimum frame size to 640 bytes. Real Fast Ethernet kept 64 bytes and reduced the maximum cable length."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "cn-08",
+   "subject": "CN",
+   "topic": "Network Security Basics",
+   "difficulty": 1,
+   "author": "Harsh Vardhan",
+   "title": "Symmetric vs asymmetric encryption in HTTPS: which one encrypts the actual data?",
+   "body": "I read that HTTPS uses both RSA (asymmetric) and AES (symmetric). My question is simple: when I open a website, which of these encrypts the pages and the form data I send? And what is RSA used for then? If asymmetric is more secure, why not use it for everything?\n\nOur teacher drew a diagram with keys going back and forth between the browser and the server, but it went too fast for me to follow.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 16.08,
+   "solvedAfterMinutes": 0,
+   "views": 6,
+   "answers": [],
+   "hints": []
+  },
+  {
+   "key": "cn-09",
+   "subject": "CN",
+   "topic": "TCP & Congestion Control",
+   "difficulty": 1,
+   "author": "Siddharth Jain",
+   "title": "Three-way handshake: why three steps? Wouldn't two be enough?",
+   "body": "TCP connection setup uses SYN, SYN-ACK, ACK. I understand what each message is but not why the last ACK is needed. After the server sends SYN-ACK the client has already received a reply, so the connection seems established. Why does TCP not stop after two messages? Is there a situation where two messages would go wrong?\n\nI would like a simple example or analogy, because the sequence number part of the explanation in the book went over my head.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 30.35,
+   "solvedAfterMinutes": 0,
+   "views": 38,
+   "answers": [],
+   "hints": []
+  },
+  {
+   "key": "oopj-01",
+   "subject": "OOPJ",
+   "topic": "Collections Framework",
+   "difficulty": 2,
+   "author": "Arjun Malhotra",
+   "title": "ConcurrentModificationException when removing from an ArrayList in a for-each loop",
+   "body": "For my Java lab I am removing all even numbers from an ArrayList while looping:\n\n```java\nList<Integer> nums = new ArrayList<>(List.of(1, 2, 3, 4, 5, 6));\nfor (Integer n : nums) {\n    if (n % 2 == 0) nums.remove(n);\n}\n```\n\nThis throws ConcurrentModificationException. There are no threads in my program, so I do not understand what is concurrent here. Strangely, when I tried the list [1, 2, 3, 4] it did not throw at all. What is happening and what is the correct way to remove elements while iterating?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 248.0,
+   "solvedAfterMinutes": 230,
+   "views": 58,
+   "answers": [
+    {
+     "author": "Tanvi Rao",
+     "afterMinutes": 165,
+     "accepted": true,
+     "rating": 5,
+     "body": "\"Concurrent\" here just means modification of the list while an iterator is still using it; threads are not needed.\n\nThe for-each loop is compiled into an Iterator. ArrayList keeps a counter `modCount` that increases on every structural change (add or remove). The iterator remembers the modCount when it was created, and on every call to `next()` it checks that the counter is unchanged. If you call `nums.remove(...)` directly, modCount changes, and the next `next()` throws ConcurrentModificationException. This behaviour is called fail-fast.\n\nWhy did [1, 2, 3, 4] not throw? Removing 3's neighbour at the second-to-last position makes `hasNext()` return false before `next()` is called again, so the check never runs. It is a quirk, not a guarantee, so never depend on it.\n\nCorrect ways:\n\n```java\n// 1. removeIf (Java 8+), the cleanest\nnums.removeIf(n -> n % 2 == 0);\n\n// 2. Iterator.remove(), which updates modCount in a way the iterator knows\nIterator<Integer> it = nums.iterator();\nwhile (it.hasNext()) {\n    if (it.next() % 2 == 0) it.remove();\n}\n\n// 3. Build a new list with a stream\nList<Integer> odd = nums.stream().filter(n -> n % 2 != 0).toList();\n```\n\nNote: `nums.remove(n)` with an `Integer` removes by object, but `nums.remove(int)` removes by index, so be careful with overloads."
+    },
+    {
+     "author": "Zoya Khan",
+     "afterMinutes": 216,
+     "accepted": false,
+     "rating": null,
+     "body": "If you really do have several threads, use CopyOnWriteArrayList or a concurrent collection from java.util.concurrent. They are designed for modification during iteration, at the cost of copying on every write for CopyOnWriteArrayList. For single-threaded code, removeIf is almost always the right answer.\n\nAnother common version of this bug is calling list.add() inside a for-each loop over the same list. It fails for the same reason. A clean pattern is to collect the changes in a second list during the loop and apply them with addAll or removeAll after the loop ends. This also makes the code easier to read and debug."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "oopj-02",
+   "subject": "OOPJ",
+   "topic": "Inheritance & Polymorphism",
+   "difficulty": 2,
+   "author": "Aditya Bansal",
+   "title": "Method overriding vs overloading: why does the child's method run through a parent reference?",
+   "body": "I have this code and I expected the output \"Animal sound\" because the variable type is Animal:\n\n```java\nclass Animal { void sound() { System.out.println(\"Animal sound\"); } }\nclass Dog extends Animal { void sound() { System.out.println(\"Bark\"); } }\n\nAnimal a = new Dog();\na.sound();\n```\n\nIt prints \"Bark\". Why does Java call the Dog method? What is the difference between overriding and overloading, and does the same thing happen with variables?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 66.17,
+   "solvedAfterMinutes": 474,
+   "views": 17,
+   "answers": [
+    {
+     "author": "Tanvi Rao",
+     "afterMinutes": 149,
+     "accepted": true,
+     "rating": 5,
+     "body": "Java decides which overridden method to run at runtime, based on the actual object type, not the reference type. This is runtime polymorphism (dynamic method dispatch). The reference type `Animal` only decides what you are allowed to call at compile time (`a.sound()` is allowed because Animal has sound()). The object created with `new Dog()` decides which implementation executes, which is Dog's.\n\nOverriding vs overloading:\n- Overriding: a subclass provides a new implementation of an inherited method with the same name and parameter list (and a compatible return type, and no weaker access). Resolved at RUNTIME.\n- Overloading: several methods in the same class with the same name but different parameters. Resolved at COMPILE TIME using the declared types of the arguments.\n\nVariables and static methods do not behave polymorphically:\n\n```java\nclass A { String name = \"A\"; static void hi() { System.out.println(\"A\"); } }\nclass B extends A { String name = \"B\"; static void hi() { System.out.println(\"B\"); } }\nA x = new B();\nSystem.out.println(x.name);  // A  (fields use the reference type)\nx.hi();                      // A  (static methods are hidden, not overridden)\n```\n\nAdd @Override to the subclass method. The compiler then reports an error if you accidentally overload instead of override, for example by changing a parameter type."
+    },
+    {
+     "author": "Zoya Khan",
+     "afterMinutes": 248,
+     "accepted": false,
+     "rating": null,
+     "body": "Private, final and static methods cannot be overridden, so they are bound at compile time. A private method in the parent is not even visible to the child, so a method with the same name in the child is a brand new method.\n\nTo remember it: overriding needs inheritance and an identical signature, and the JVM picks the method at runtime using the object's real class. Overloading needs only the same name in one class with different parameter lists, and the compiler picks it. A common viva trap is f(Object o) versus f(String s) called with null; the more specific String version is chosen."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "oopj-03",
+   "subject": "OOPJ",
+   "topic": "Interfaces & Abstract Classes",
+   "difficulty": 2,
+   "author": "Pooja Saini",
+   "title": "Abstract class or interface? When should I use which in Java 8 and later?",
+   "body": "Since Java 8 interfaces can have default and static methods. Then I do not understand what is left as a difference between an abstract class and an interface. In the viva I said \"interface has only abstract methods\" and was told this is outdated. Can someone explain the real differences and when to prefer one over the other, with an example?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 304.87,
+   "solvedAfterMinutes": 686,
+   "views": 89,
+   "answers": [
+    {
+     "author": "Zoya Khan",
+     "afterMinutes": 91,
+     "accepted": true,
+     "rating": 4,
+     "body": "Real differences today:\n\n| | Abstract class | Interface |\n|---|---|---|\n| Inheritance | A class extends only ONE | A class can implement MANY |\n| State | Can have instance fields, constructors | Only constants (public static final), no constructors |\n| Methods | Any access level, abstract or concrete | public; abstract, default, static or private (Java 9+) |\n| Purpose | Share code and state in a family of classes | Define a capability / contract |\n\nWhen to choose:\n- Use an abstract class when subclasses are closely related and share fields or common code: `abstract class Shape { String color; abstract double area(); }`.\n- Use an interface when unrelated classes should be usable in the same way (Comparable, Runnable, Serializable), or when you need multiple inheritance of type.\n- Prefer interfaces for APIs; default methods let you add new behaviour without breaking existing implementers.\n\nDefault method conflict: if a class implements two interfaces with the same default method, you must override it and can choose one with `InterfaceName.super.method()`.\n\nA good rule: \"is-a\" with shared state means abstract class; \"can-do\" means interface."
+    },
+    {
+     "author": "Rohan Mehta",
+     "afterMinutes": 111,
+     "accepted": false,
+     "rating": null,
+     "body": "An extra point worth knowing for the exam: an interface can extend several other interfaces, and a class can both extend an abstract class and implement interfaces at the same time. A common design is an interface for the contract plus an abstract class that provides a skeleton implementation, like List and AbstractList in the JDK.\n\nSince Java 8 you also see functional interfaces, which are interfaces with exactly one abstract method such as Runnable or Comparator. They can be used with lambda expressions, which an abstract class cannot. That is one more practical reason to prefer interfaces for small behaviours that you want to pass around as arguments."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "oopj-04",
+   "subject": "OOPJ",
+   "topic": "Exception Handling",
+   "difficulty": 2,
+   "author": "Arjun Malhotra",
+   "title": "Does the finally block run if there is a return statement in try?",
+   "body": "Our teacher asked this in the viva: what is printed by this code?\n\n```java\nstatic int test() {\n    try {\n        return 1;\n    } finally {\n        System.out.println(\"finally\");\n    }\n}\n```\n\nI said it will not print because the method already returned. I think I was wrong. What exactly happens, and what if finally also has a return statement? Are there cases where finally does not run at all?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 144.48,
+   "solvedAfterMinutes": 594,
+   "views": 88,
+   "answers": [
+    {
+     "author": "Riya Chopra",
+     "afterMinutes": 56,
+     "accepted": true,
+     "rating": 5,
+     "body": "\"finally\" is printed, and then the method returns 1. The finally block runs even when try returns. The sequence is: the return value (1) is evaluated and saved, then the finally block executes, then the saved value is returned.\n\nIf finally modifies a primitive variable that was returned, it does not change the returned value, because the value was already copied:\n\n```java\nstatic int f() {\n    int x = 1;\n    try { return x; }\n    finally { x = 2; }    // still returns 1\n}\n```\n\nIf finally itself has a return, it overrides the one from try and also swallows any exception that was in flight:\n\n```java\nstatic int g() {\n    try { return 1; }\n    finally { return 2; }  // returns 2; avoid this, it hides bugs\n}\n```\n\nFinally does NOT run when: the JVM exits before reaching it (System.exit(), a fatal crash, power loss), the thread is killed, or the try block never starts executing (for example an infinite loop before it). Apart from those, it always runs, which is why it is used to close resources. For resources, prefer try-with-resources, which closes automatically."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "oopj-05",
+   "subject": "OOPJ",
+   "topic": "Generics",
+   "difficulty": 3,
+   "author": "Arjun Malhotra",
+   "title": "Why can't I create a List<int> or a generic array in Java?",
+   "body": "I wanted a list of integers and wrote List<int> but the compiler says \"unexpected type, required reference, found int\". After that I tried to create an array of generics, new List<String>[10], and that was not allowed either. Why does Java have these restrictions? In C++ templates I can use int directly. How do I work around them?\n\nThe error messages are different for the two cases, which makes me think there are two separate rules behind them.",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 146.8,
+   "solvedAfterMinutes": 1650,
+   "views": 47,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Generics in Java are checked by the compiler and then the type arguments are removed before the program runs. What kind of type can replace a type variable, if it must be treated as an Object at runtime? And do arrays remember their element type at runtime?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Explain type erasure: generic types become Object (or the bound) in the bytecode.\n- Primitives (int, double) are not Objects, so they cannot be type arguments; use wrapper classes (Integer, Double) with autoboxing.\n- Arrays carry their element type at runtime and check it on store; erased generics cannot, so generic array creation could break type safety.\n- Show the workarounds: List<Integer>, and an ArrayList<List<String>> instead of a generic array.\n- Pitfall: autoboxing costs memory and time, and `==` on Integer objects compares references."
+    }
+   ]
+  },
+  {
+   "key": "oopj-06",
+   "subject": "OOPJ",
+   "topic": "Streams & Lambdas",
+   "difficulty": 2,
+   "author": "Aditya Bansal",
+   "title": "How does stream().filter().map().collect() actually run? Is it lazy?",
+   "body": "I am confused about the order of execution in streams. I put print statements inside filter and map:\n\n```java\nList<String> r = Stream.of(\"a\", \"bb\", \"ccc\")\n    .filter(s -> { System.out.println(\"filter \" + s); return s.length() > 1; })\n    .map(s -> { System.out.println(\"map \" + s); return s.toUpperCase(); })\n    .collect(Collectors.toList());\n```\n\nI expected all the filter lines first and then all the map lines, but the output is mixed. Also, if I remove collect, nothing prints. Can someone explain how streams execute?",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 244.23,
+   "solvedAfterMinutes": 207,
+   "views": 55,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "A stream pipeline has two kinds of operations. Which kind starts the work, and which kind only describes what should happen? Then ask whether the data is processed stage by stage or element by element."
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Classify filter and map as intermediate operations, and collect as a terminal operation.\n- State the rule: intermediate operations are lazy; nothing runs until the terminal operation is called.\n- Trace one element at a time through the whole pipeline (filter, then map), then move to the next element.\n- Predict the printed order for \"a\", \"bb\" and \"ccc\" using that rule.\n- Pitfall: short-circuiting operations such as findFirst can stop early, so later elements may never be processed."
+    }
+   ]
+  },
+  {
+   "key": "oopj-07",
+   "subject": "OOPJ",
+   "topic": "Multithreading",
+   "difficulty": 3,
+   "author": "Pooja Saini",
+   "title": "synchronized method vs synchronized block: which should I use for a shared counter?",
+   "body": "I have a counter shared between two threads and I am getting wrong totals (sometimes 1,800 instead of 2,000 after 2 x 1,000 increments). I know I need synchronization. I see two forms in my notes: marking the whole method synchronized, and using a synchronized block. When should I use which? Is there any performance difference? And someone mentioned AtomicInteger, which is new to me.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 50.15,
+   "solvedAfterMinutes": 0,
+   "views": 31,
+   "answers": [
+    {
+     "author": "Tanvi Rao",
+     "afterMinutes": 25,
+     "accepted": false,
+     "rating": null,
+     "body": "The wrong total comes from `count++` not being atomic. It is three steps (read, add, write). Two threads can read the same value and both write back value + 1, losing an increment.\n\nSynchronized method: locks on `this` (or the Class object for a static method) for the whole method body.\n\n```java\nsynchronized void increment() { count++; }\n```\n\nSynchronized block: locks on an object you choose, only for the lines inside the block.\n\n```java\nprivate final Object lock = new Object();\nvoid increment() {\n    // other work that needs no lock can run here\n    synchronized (lock) { count++; }\n}\n```\n\nWhich to use:\n- Method form is simplest and fine when the entire method is the critical section.\n- Block form keeps the critical section small (better throughput when the method also does slow work), and lets you lock on a private object so outside code cannot interfere by locking on your object.\n\nThe performance difference is mostly about how long the lock is held, not the keyword.\n\nFor a plain counter the best option is `AtomicInteger`: `count.incrementAndGet()`. It uses a hardware compare-and-swap instruction and needs no lock, so it is both simpler and faster under contention. Use synchronized when several variables must be updated together as one unit."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "oopj-08",
+   "subject": "OOPJ",
+   "topic": "Classes & Objects",
+   "difficulty": 1,
+   "author": "Aditya Bansal",
+   "title": "== vs equals() for Strings: why does new String(\"a\") == \"a\" print false?",
+   "body": "Lab output that confuses me:\n\n```java\nString s1 = \"hello\";\nString s2 = \"hello\";\nString s3 = new String(\"hello\");\nSystem.out.println(s1 == s2);       // true\nSystem.out.println(s1 == s3);       // false\nSystem.out.println(s1.equals(s3));  // true\n```\n\nWhy is s1 == s2 true but s1 == s3 false when all three contain the same text? When should I use == and when equals()?\n\nI want to understand the reason, because the same confusion appeared in last year's paper.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 6.98,
+   "solvedAfterMinutes": 0,
+   "views": 32,
+   "answers": [],
+   "hints": []
+  },
+  {
+   "key": "math-01",
+   "subject": "MATH",
+   "topic": "Probability Basics",
+   "difficulty": 1,
+   "author": "Kabir Sethi",
+   "title": "Probability of at least one six in four rolls of a die",
+   "body": "Problem from the tutorial: a fair die is rolled 4 times. What is the probability of getting at least one six? I tried adding 1/6 four times, which gives 4/6, but that cannot be right since the answer should not depend on adding like that. My friend said to find the probability of no six and subtract from 1. I do not see why this is easier. Can someone explain properly?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 41.87,
+   "solvedAfterMinutes": 556,
+   "views": 47,
+   "answers": [
+    {
+     "author": "Navya Iyer",
+     "afterMinutes": 118,
+     "accepted": true,
+     "rating": 5,
+     "body": "Adding 1/6 four times double counts. The events \"six on roll 1\" and \"six on roll 2\" can both happen, and the sum counts those outcomes more than once. You would also get a probability above 1 for 7 rolls (7/6), which is impossible.\n\nThe complement trick is easier because \"at least one six\" has many cases (exactly one, two, three or four sixes), but its opposite has just one case: no six at all.\n\n- P(no six on one roll) = 5/6.\n- The rolls are independent, so P(no six in 4 rolls) = (5/6)^4 = 625/1296.\n- P(at least one six) = 1 - 625/1296 = 671/1296, which is about 0.5177.\n\nSo the chance is slightly more than half. This is a classic problem, and it explains why a gambler betting \"a six in four rolls\" wins slightly more than half the time.\n\nGeneral pattern: P(at least one) = 1 - P(none). Use it whenever the problem says \"at least\" or \"one or more\"."
+    },
+    {
+     "author": "Sneha Pillai",
+     "afterMinutes": 167,
+     "accepted": false,
+     "rating": null,
+     "body": "Check with the direct method for a smaller case, two rolls. Exactly one six: 2 x (1/6)(5/6) = 10/36. Two sixes: 1/36. Sum = 11/36. The complement gives 1 - 25/36 = 11/36, the same answer with much less work.\n\nAnother check with the general formula: for n rolls the probability of at least one six is 1 - (5/6)^n. For n = 1 it is 1/6, for n = 4 it is 0.518 and for n = 13 it is 0.906. The value rises steadily towards 1 but never reaches it. Plotting these few values makes the pattern easy to remember."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "math-02",
+   "subject": "MATH",
+   "topic": "Combinatorics",
+   "difficulty": 2,
+   "author": "Manav Jindal",
+   "title": "How many ways can 5 people sit around a circular table? Why do we divide by n?",
+   "body": "In the combinatorics tutorial the answer for arranging 5 people around a round table is 4! = 24, but for a straight row it is 5! = 120. I do not understand where the 24 comes from. Rotating everyone one seat gives the same arrangement, I get that, but how does this lead to 4!? Also what changes if the table has a head, or if clockwise and anticlockwise arrangements are treated as the same, like beads on a necklace?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 74.01,
+   "solvedAfterMinutes": 232,
+   "views": 24,
+   "answers": [
+    {
+     "author": "Aanya Sharma",
+     "afterMinutes": 168,
+     "accepted": true,
+     "rating": 5,
+     "body": "Count the arrangements in a row first: 5! = 120. In a circle, an arrangement and its rotations count as the same seating. For 5 people there are exactly 5 rotations of any arrangement (shift everyone by 0, 1, 2, 3 or 4 seats), and all 5 are the same circular arrangement. So every circular arrangement was counted 5 times in the 120:\n\nCircular arrangements = 5! / 5 = 4! = 24.\n\nAnother way to see it: fix one person (say A) at a particular seat to remove the rotation. The other 4 people can then be arranged in the remaining 4 seats in 4! = 24 ways.\n\nIn general, n people around a table: (n - 1)!.\n\nVariations:\n- Clockwise and anticlockwise treated as the same (a necklace or bracelet, no distinction between a pattern and its mirror image): divide by 2 again, so (n - 1)! / 2 for n >= 3. For 5 beads that is 12.\n- A table with a head or numbered seats: now rotations are different, so the answer is back to n! = 120.\n- Two particular people must sit together: treat them as one block, giving (n - 2)! circular arrangements of 4 units... which is 3! = 6, times 2 for the order inside the block = 12."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "math-03",
+   "subject": "MATH",
+   "topic": "Logic & Proofs",
+   "difficulty": 2,
+   "author": "Aditya Bansal",
+   "title": "Prove 1 + 2 + ... + n = n(n+1)/2 by induction: stuck in the inductive step",
+   "body": "We have to prove by mathematical induction that the sum of the first n natural numbers is n(n+1)/2. I did the base case n = 1 (1 = 1 x 2 / 2, fine). In the inductive step I assume P(k) is true and need to show P(k+1). I write the left side for k+1 but I do not know how to use the assumption and I end up going in circles. How should I structure the step?",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 72.91,
+   "solvedAfterMinutes": 287,
+   "views": 40,
+   "answers": [
+    {
+     "author": "Aanya Sharma",
+     "afterMinutes": 157,
+     "accepted": true,
+     "rating": 5,
+     "body": "Structure of an induction proof: base case, inductive hypothesis, inductive step, conclusion.\n\nClaim P(n): 1 + 2 + ... + n = n(n+1)/2.\n\nBase case: for n = 1, the left side is 1 and the right side is 1 x 2 / 2 = 1. True.\n\nInductive hypothesis: assume P(k) is true for some k >= 1, that is 1 + 2 + ... + k = k(k+1)/2.\n\nInductive step: we must show P(k+1): 1 + 2 + ... + k + (k+1) = (k+1)(k+2)/2.\n\nStart from the left side and split off the last term so the assumption can be used:\n\n1 + 2 + ... + k + (k+1) = [1 + 2 + ... + k] + (k+1)\n= k(k+1)/2 + (k+1)    (using the hypothesis)\n= (k+1)(k/2 + 1)\n= (k+1)(k+2)/2.\n\nThis is exactly the right side of P(k+1).\n\nConclusion: P(1) is true and P(k) implies P(k+1), so by the principle of mathematical induction P(n) holds for all n >= 1.\n\nThe trick you were missing: write the (k+1) sum as \"the k sum plus one more term\". That is where the hypothesis enters."
+    },
+    {
+     "author": "Ira Kapoor",
+     "afterMinutes": 394,
+     "accepted": false,
+     "rating": null,
+     "body": "Common mistake to avoid: never start from the formula you want to prove and work both sides toward each other, as if it were already true. Start from one side only and transform it into the other, as shown above. Write \"by the inductive hypothesis\" at the line where you use it, because examiners look for that phrase.\n\nFor practice, prove that the sum of the first n odd numbers equals n squared with the same structure: the base case n = 1 gives 1, and the inductive step adds the next odd number 2k + 1 to k squared to get (k + 1) squared."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "math-04",
+   "subject": "MATH",
+   "topic": "Graph Theory",
+   "difficulty": 2,
+   "author": "Gurnoor Dhillon",
+   "title": "Handshaking lemma: why is the sum of degrees always even?",
+   "body": "Our teacher stated the handshaking lemma: the sum of the degrees of all vertices in a graph equals twice the number of edges. I can see it works for the examples I draw, but I would like to understand why. Also, a question asked: can a graph have 7 vertices each of degree 3? I guessed yes but the answer is no, and I cannot connect it to the lemma.",
+   "status": "SOLVED",
+   "resolution": "PEER_ANSWER",
+   "ageHours": 202.26,
+   "solvedAfterMinutes": 240,
+   "views": 76,
+   "answers": [
+    {
+     "author": "Navya Iyer",
+     "afterMinutes": 108,
+     "accepted": true,
+     "rating": 5,
+     "body": "Why the sum is 2 x edges: every edge connects two vertices, so it adds 1 to the degree of each of its two endpoints. If you add up all the degrees, each edge has been counted exactly twice, once at each end.\n\nSum of deg(v) over all vertices = 2|E|.\n\n(A self-loop adds 2 to the degree of its vertex, so the formula still holds.)\n\nConsequence: the sum of degrees equals 2|E|, which is an even number. Even numbers have an even count of odd terms, so the number of vertices with odd degree is always even.\n\nYour question: 7 vertices each of degree 3 would give a degree sum of 7 x 3 = 21, which is odd. But the sum must be 2|E|, which is even. So such a graph cannot exist. (Equivalently, 7 vertices of odd degree is an odd number of odd-degree vertices.)\n\nCompare: 6 vertices of degree 3 is possible, for example the complete bipartite graph K(3,3), with 9 edges, since 6 x 3 = 18 = 2 x 9."
+    },
+    {
+     "author": "Sneha Pillai",
+     "afterMinutes": 180,
+     "accepted": false,
+     "rating": null,
+     "body": "This is useful in real life too: at a party, the number of people who shook hands an odd number of times is always even. That is the origin of the name. Try it on any small group to convince yourself.\n\nAnother consequence: the number of vertices with odd degree is always even, so a degree sequence like 3, 3, 3, 2, 2 (three odd entries) is impossible, while 3, 3, 3, 3, 2 is fine. Checking the parity of the degree sum is the fastest way to reject an impossible degree sequence in a question, before trying to draw anything."
+    }
+   ],
+   "hints": []
+  },
+  {
+   "key": "math-05",
+   "subject": "MATH",
+   "topic": "Sets & Relations",
+   "difficulty": 1,
+   "author": "Manav Jindal",
+   "title": "How to check reflexive, symmetric and transitive from a relation matrix?",
+   "body": "I am given a relation on the set {1, 2, 3} as a 3x3 matrix of 0s and 1s. The questions say \"is it reflexive, symmetric, transitive?\". I know the definitions in words but when I look at a matrix I do not know what to check. For transitive I try all combinations and it takes me a long time. Is there a quicker way using the matrix?",
+   "status": "SOLVED",
+   "resolution": "AI_HINT",
+   "ageHours": 66.96,
+   "solvedAfterMinutes": 2209,
+   "views": 24,
+   "answers": [],
+   "hints": [
+    {
+     "level": 1,
+     "content": "Translate each definition into a statement about positions in the matrix. For example, \"every element is related to itself\" means something about the diagonal. What would symmetric mean for the entry in row i, column j versus row j, column i?"
+    },
+    {
+     "level": 2,
+     "content": "**Approach**\n- Reflexive: check the main diagonal; all entries must be 1.\n- Symmetric: compare the matrix with its transpose; entry (i, j) must equal entry (j, i) for every pair.\n- Transitive: compute the boolean square of the matrix (M times M, with OR for addition and AND for multiplication) and check that every 1 in M squared is also a 1 in M.\n- Antisymmetric: for i different from j, entries (i, j) and (j, i) are never both 1.\n- Pitfall: transitivity needs every chain a to b to c, including cases where a equals c."
+    }
+   ]
+  },
+  {
+   "key": "math-06",
+   "subject": "MATH",
+   "topic": "Recurrence Relations",
+   "difficulty": 3,
+   "author": "Kabir Sethi",
+   "title": "Solve T(n) = 2T(n/2) + n using the recurrence tree method",
+   "body": "I am learning recurrences for the algorithms course. The recurrence for merge sort is T(n) = 2T(n/2) + n and the book says T(n) = Theta(n log n). I do not understand how to get this from a recursion tree. How many levels are there, what is the cost of each level and how do I add them up? I also want to know how the same method changes for T(n) = 2T(n/2) + 1.",
+   "status": "OPEN",
+   "resolution": null,
+   "ageHours": 42.51,
+   "solvedAfterMinutes": 0,
+   "views": 6,
+   "answers": [
+    {
+     "author": "Sneha Pillai",
+     "afterMinutes": 157,
+     "accepted": false,
+     "rating": null,
+     "body": "Draw the recursion tree and compute the cost level by level.\n\n- Level 0: one problem of size n. Work at this level: n.\n- Level 1: two problems of size n/2. Work: 2 x (n/2) = n.\n- Level 2: four problems of size n/4. Work: 4 x (n/4) = n.\n- Level i: 2^i problems of size n/2^i. Work: 2^i x (n/2^i) = n.\n\nEvery level costs n in total.\n\nNumber of levels: the size becomes 1 when n / 2^i = 1, so i = log2(n). There are log2(n) + 1 levels, counting the leaves.\n\nTotal = n x (number of levels) = n log2(n) + n, which is Theta(n log n).\n\nThe leaves: there are 2^(log2 n) = n leaves, each costing T(1) = constant, so that adds Theta(n), which is dominated by the n log n term.\n\nFor T(n) = 2T(n/2) + 1: the level costs are 1, 2, 4, ..., 2^i, which is a geometric series. The last level has n leaves, and the sum is about 1 + 2 + 4 + ... + n = 2n - 1 = Theta(n). Here the cost grows going down the tree, so the leaves dominate. In the merge sort case every level costs the same, so you multiply by the height."
+    }
+   ],
+   "hints": []
+  }
+ ]
+}
