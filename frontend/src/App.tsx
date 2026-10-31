@@ -4,12 +4,21 @@ import { Toaster } from 'sonner'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PublicOnlyRoute } from './components/layout/PublicOnlyRoute'
+import { Spinner } from './components/ui/Spinner'
 import { AuthProvider } from './lib/auth'
 import { queryClient } from './lib/queryClient'
 import { Landing } from './pages/Landing'
 import { Login } from './pages/Login'
 import { NotFound } from './pages/NotFound'
 import { Signup } from './pages/Signup'
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-dvh items-center justify-center text-[var(--color-brand)]">
+      <Spinner className="size-8" label="Loading page" />
+    </div>
+  )
+}
 
 function RootLayout() {
   return (
@@ -23,6 +32,7 @@ function RootLayout() {
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    hydrateFallbackElement: <RouteFallback />,
     children: [
       { path: '/', element: <Landing /> },
       {

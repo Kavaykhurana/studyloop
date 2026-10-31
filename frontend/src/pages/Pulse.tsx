@@ -91,8 +91,9 @@ export function Pulse() {
               <Card className="flex flex-col gap-1">
                 <h2 className="t-h3">AI health</h2>
                 <p className="font-mono text-[13px] text-ink-2">
-                  {pulse.data.ai.calls} AI calls · {Math.round(pulse.data.ai.successRate * 100)}% success · p50{' '}
-                  {pulse.data.ai.p50LatencyMs ?? '—'} ms
+                  {pulse.data.ai.calls === 0
+                    ? 'No AI calls in this window yet'
+                    : `${pulse.data.ai.calls} AI calls · ${Math.round(pulse.data.ai.successRate * 100)}% success · p50 ${pulse.data.ai.p50LatencyMs ?? '—'} ms`}
                 </p>
               </Card>
             </div>

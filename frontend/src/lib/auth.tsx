@@ -102,13 +102,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await api.post('/auth/logout')
-    } finally {
-      setAccessToken(null)
-      rememberSession(false)
-      queryClient.clear()
-      setStatus('anon')
-      navigate('/', { replace: true })
+    } catch {
+      // The local session is cleared below either way; the server-side family expires on its own.
     }
+    // Leave the protected page first: clearing the session while still on it would make ProtectedRoute redirect to
+    // /login?next=... and override this navigation.
+    await navigate('/', { replace: true })
+    setAccessToken(null)
+    rememberSession(false)
+    queryClient.clear()
+    setStatus('anon')
   }, [navigate, queryClient])
 
   const value = useMemo<AuthContextValue>(
