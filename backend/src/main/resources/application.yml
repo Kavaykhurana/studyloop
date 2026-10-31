@@ -62,6 +62,12 @@ app:
     grounding-threshold: ${SIM_GROUNDING_THRESHOLD:0.65}
     semantic-floor: ${SIM_SEMANTIC_FLOOR:0.50}
     semantic-ceil: ${SIM_SEMANTIC_CEIL:0.90}
+  # Used only when GEMINI_API_KEY is blank: calibrated for the bag-of-words fake embedder on the seeded campus.
+  fake-similarity:
+    duplicate-threshold: ${SIM_FAKE_DUPLICATE_THRESHOLD:0.45}
+    grounding-threshold: ${SIM_FAKE_GROUNDING_THRESHOLD:0.30}
+    semantic-floor: ${SIM_FAKE_SEMANTIC_FLOOR:0.20}
+    semantic-ceil: ${SIM_FAKE_SEMANTIC_CEIL:0.60}
   demo:
     enabled: ${DEMO_MODE:false}
     seed: ${SEED_DEMO:false}

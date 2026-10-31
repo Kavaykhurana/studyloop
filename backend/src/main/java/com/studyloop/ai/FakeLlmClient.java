@@ -43,7 +43,10 @@ public class FakeLlmClient implements LlmClient {
     private ClassifyResult classify(String text) {
         Matcher t = TITLE.matcher(text);
         String title = t.find() ? t.group(1).trim() : "Transcribed doubt";
-        return new ClassifyResult(firstSubject(text), "General", 2, true,
+        int marker = text.indexOf("DOUBT TITLE:");
+        FakeTopicGuesser.Guess guess = FakeTopicGuesser.guess(marker >= 0 ? text.substring(marker) : text,
+                subjects(text));
+        return new ClassifyResult(guess.subjectCode(), guess.topic(), 2, true,
                 title.length() <= 120 ? title : title.substring(0, 120));
     }
 
@@ -53,11 +56,54 @@ public class FakeLlmClient implements LlmClient {
                 firstSubject(text), "General", "MEDIUM");
     }
 
+    private static final Pattern TOPIC = Pattern.compile("TOPIC:\\s*([^\\n]*)");
+    private static final Pattern KNOWLEDGE = Pattern.compile(
+            "\\[#(\\d+)\\] Q: ([^\\n]*?) — [^\\n]*\\nAccepted answer: ([^\\n]*)");
+    private static final Pattern SENTENCE_END = Pattern.compile("(?<=[.!?])\\s+");
+
+    /** Rung-shaped offline hint that reuses the closest campus answer and cites it, mirroring the real prompt. */
     private HintResult hint(String text) {
         Matcher m = RUNG.matcher(text);
-        String n = m.find() ? m.group(1) : "1";
-        return new HintResult("**Hint " + n + "** — Think about what changes when the input is already sorted.",
-                List.of(), "MEDIUM");
+        int rung = m.find() ? Integer.parseInt(m.group(1)) : 1;
+        Matcher tm = TOPIC.matcher(text);
+        String topic = tm.find() ? tm.group(1).trim() : "this topic";
+        Matcher km = KNOWLEDGE.matcher(text);
+        Long citedId = null;
+        String citedTitle = null;
+        String citedAnswer = null;
+        if (km.find()) {
+            citedId = Long.parseLong(km.group(1));
+            citedTitle = km.group(2).trim();
+            citedAnswer = km.group(3).trim();
+        }
+        String cite = citedId == null ? "" : " [#" + citedId + "]";
+        String firstStep = null;
+        if (citedAnswer != null) {
+            String[] sentences = SENTENCE_END.split(citedAnswer, 3);
+            firstStep = sentences.length > 1 && sentences[0].length() < 60
+                    ? sentences[0] + " " + sentences[1] : sentences[0];
+        }
+        String content = switch (rung) {
+            case 1 -> "What is the one defining rule of **" + topic + "** that your question depends on? Write it "
+                    + "down in one line, then check which part of your problem does not obey it.";
+            case 2 -> "- Restate exactly what is given and what is asked.\n"
+                    + "- Recall the standard method for " + topic + " and apply it one step at a time.\n"
+                    + "- Check each intermediate result against the definition before moving on.\n"
+                    + "- Pitfall: skipping the check on the edge case is where most marks are lost."
+                    + (citedId == null ? "" : "\n\nA senior solved a very similar doubt:" + cite + " " + citedTitle);
+            case 3 -> (firstStep == null
+                    ? "Start by writing the definition of " + topic + " and applying it to the first part of your "
+                            + "problem only."
+                    : "Start the way the senior did in" + cite + ": " + firstStep)
+                    + "\n\nNow do the same for the next part of your problem yourself.";
+            default -> "**Answer:** " + (citedAnswer == null
+                    ? "Apply the " + topic + " method to every part of the problem and combine the results."
+                    : citedAnswer + cite)
+                    + "\n\n**Common mistake:** stopping after the first part without checking the remaining cases."
+                    + "\n\n**Try this:** change one value in your problem and solve it again from scratch.";
+        };
+        boolean cites = citedId != null && content.contains(cite);
+        return new HintResult(content, cites ? List.of(citedId) : List.of(), cites ? "HIGH" : "MEDIUM");
     }
 
     private PlanResult plan(String text) {

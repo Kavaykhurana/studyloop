@@ -22,6 +22,11 @@ app:
     grounding-threshold: 0.40
     semantic-floor: 0.25
     semantic-ceil: 0.75
+  fake-similarity:
+    duplicate-threshold: 0.65
+    grounding-threshold: 0.40
+    semantic-floor: 0.25
+    semantic-ceil: 0.75
   demo:
     enabled: true
     seed: false

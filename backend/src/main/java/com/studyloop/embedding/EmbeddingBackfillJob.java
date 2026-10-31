@@ -38,7 +38,12 @@ public class EmbeddingBackfillJob {
 
     /** Embeds up to 20 doubts that have no vector; returns how many were stored. */
     public int runOnce() {
-        List<Long> ids = store.findNullEmbeddingIds(BATCH);
+        return runOnce(BATCH);
+    }
+
+    /** Embeds up to {@code limit} (at most 50, one batch call) doubts that have no vector. */
+    public int runOnce(int limit) {
+        List<Long> ids = store.findNullEmbeddingIds(Math.min(limit, 50));
         if (ids.isEmpty()) {
             return 0;
         }

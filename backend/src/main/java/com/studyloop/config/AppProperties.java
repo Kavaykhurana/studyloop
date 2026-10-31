@@ -10,8 +10,21 @@ public record AppProperties(
         Cors cors,
         Ai ai,
         Similarity similarity,
+        Similarity fakeSimilarity,
         Demo demo,
         Version version) {
+
+    /**
+     * Thresholds in force. The deterministic fake embedder produces a much lower similarity scale than Gemini, so when
+     * no API key is configured the separately calibrated {@code app.fake-similarity} set applies instead.
+     */
+    @Override
+    public Similarity similarity() {
+        if (ai != null && !ai.enabled() && fakeSimilarity != null) {
+            return fakeSimilarity;
+        }
+        return similarity;
+    }
 
     public record Jwt(String secret, int accessTtlMinutes, int refreshTtlDays) {}
 

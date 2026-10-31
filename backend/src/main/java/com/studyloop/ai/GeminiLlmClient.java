@@ -32,14 +32,19 @@ public class GeminiLlmClient implements LlmClient {
         }
     }
 
-    private final AppProperties.Ai ai;
+    private final GeminiModels models;
     private final GeminiTransport transport;
     private final JsonMapper mapper;
     private final AiCallLogger callLogger;
 
     public GeminiLlmClient(AppProperties props, GeminiTransport transport, JsonMapper mapper,
                            AiCallLogger callLogger) {
-        this.ai = props.ai();
+        this(new GeminiModels(props.ai()), transport, mapper, callLogger);
+    }
+
+    public GeminiLlmClient(GeminiModels models, GeminiTransport transport, JsonMapper mapper,
+                           AiCallLogger callLogger) {
+        this.models = models;
         this.transport = transport;
         this.mapper = mapper;
         this.callLogger = callLogger;
@@ -47,16 +52,17 @@ public class GeminiLlmClient implements LlmClient {
 
     @Override
     public <T> AiResult<T> generateJson(AiRequest request, Class<T> type) {
-        String primary = request.tier() == ModelTier.CHAT ? ai.chatModel() : ai.fastModel();
+        String primary = request.tier() == ModelTier.CHAT ? models.chat() : models.fast();
+        String fallback = models.fast();
         Failure failure;
         try {
             return runWithRetry(primary, request, type);
         } catch (Failure f) {
             failure = f;
         }
-        if (failure.kind == Kind.TRANSIENT && request.tier() == ModelTier.CHAT && !ai.fastModel().equals(primary)) {
+        if (failure.kind == Kind.TRANSIENT && request.tier() == ModelTier.CHAT && !fallback.equals(primary)) {
             try {
-                return attempt(ai.fastModel(), request, type);
+                return attempt(fallback, request, type);
             } catch (Failure f) {
                 failure = f;
             }
@@ -101,7 +107,7 @@ public class GeminiLlmClient implements LlmClient {
             Failure f;
             if (status == 429 || status >= 500) {
                 f = new Failure(Kind.TRANSIENT, "HTTP_" + status);
-            } else if (status == 400 || status == 403) {
+            } else if (status == 400 || status == 403 || status == 404) {
                 log.error("Gemini rejected the request (HTTP {}); check the model name and API key for {}", status,
                         model);
                 f = new Failure(Kind.CONFIG, "AI_CONFIG");

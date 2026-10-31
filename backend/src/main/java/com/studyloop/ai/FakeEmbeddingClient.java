@@ -9,6 +9,12 @@ import java.util.Locale;
 public class FakeEmbeddingClient implements EmbeddingClient {
 
     static final int DIMENSIONS = 768;
+    static final String MODEL_ID = "fake-bow-768";
+
+    @Override
+    public String modelId() {
+        return MODEL_ID;
+    }
 
     @Override
     public float[] embed(String text) {

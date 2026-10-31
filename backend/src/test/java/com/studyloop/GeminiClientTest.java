@@ -63,7 +63,7 @@ class GeminiClientTest {
         server.start();
         AppProperties props = new AppProperties(null, null, null,
                 new AppProperties.Ai("test-key", "http://127.0.0.1:" + server.getAddress().getPort(),
-                        "chat-model", "fast-model", "embed-model"), null, null, null);
+                        "chat-model", "fast-model", "embed-model"), null, null, null, null);
         GeminiTransport transport = new GeminiTransport(HttpClient.newHttpClient(), props);
         AiCallLogger logger = mock(AiCallLogger.class);
         llm = new GeminiLlmClient(props, transport, mapper, logger);

@@ -1,5 +1,6 @@
 package com.studyloop.embedding;
 
+import com.studyloop.ai.EmbeddingClient;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,14 +22,33 @@ public class EmbeddingStore {
             LIMIT ?""";
 
     private final JdbcTemplate jdbc;
+    private final EmbeddingClient embeddings;
 
-    public EmbeddingStore(JdbcTemplate jdbc) {
+    public EmbeddingStore(JdbcTemplate jdbc, EmbeddingClient embeddings) {
         this.jdbc = jdbc;
+        this.embeddings = embeddings;
     }
 
+    /** Stores the vector together with the id of the model that produced it. */
     public void saveDoubtEmbedding(long doubtId, float[] vector) {
-        jdbc.update("UPDATE doubts SET embedding = CAST(? AS vector) WHERE id = ?", VectorMath.toLiteral(vector),
-                doubtId);
+        jdbc.update("UPDATE doubts SET embedding = CAST(? AS vector), embedding_model = ? WHERE id = ?",
+                VectorMath.toLiteral(vector), embeddings.modelId(), doubtId);
+    }
+
+    /**
+     * Clears vectors produced by any model other than the current one: they live in a different vector space, so
+     * comparing them with new query vectors would return meaningless similarities. Returns how many were cleared; the
+     * cleared rows are then re-embedded like any other missing embedding.
+     */
+    public int clearForeignEmbeddings() {
+        return jdbc.update("""
+                UPDATE doubts SET embedding = NULL, embedding_model = NULL
+                WHERE embedding IS NOT NULL AND embedding_model IS DISTINCT FROM ?""", embeddings.modelId());
+    }
+
+    public int countMissingEmbeddings() {
+        Integer n = jdbc.queryForObject("SELECT count(*) FROM doubts WHERE embedding IS NULL", Integer.class);
+        return n == null ? 0 : n;
     }
 
     /** The stored vector as a pgvector literal, ready to be passed back into similarity queries. */

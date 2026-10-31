@@ -21,17 +21,27 @@ public class GeminiEmbeddingClient implements EmbeddingClient {
     private static final int DIMENSIONS = 768;
     private static final int MAX_BATCH = 50;
 
-    private final AppProperties.Ai ai;
+    private final GeminiModels models;
     private final GeminiTransport transport;
     private final JsonMapper mapper;
     private final AiCallLogger callLogger;
 
     public GeminiEmbeddingClient(AppProperties props, GeminiTransport transport, JsonMapper mapper,
                                  AiCallLogger callLogger) {
-        this.ai = props.ai();
+        this(new GeminiModels(props.ai()), transport, mapper, callLogger);
+    }
+
+    public GeminiEmbeddingClient(GeminiModels models, GeminiTransport transport, JsonMapper mapper,
+                                 AiCallLogger callLogger) {
+        this.models = models;
         this.transport = transport;
         this.mapper = mapper;
         this.callLogger = callLogger;
+    }
+
+    @Override
+    public String modelId() {
+        return models.embed();
     }
 
     @Override
@@ -39,7 +49,7 @@ public class GeminiEmbeddingClient implements EmbeddingClient {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("content", Map.of("parts", List.of(Map.of("text", text))));
         body.put("outputDimensionality", DIMENSIONS);
-        JsonNode root = call("/models/" + ai.embedModel() + ":embedContent", body, Duration.ofSeconds(5));
+        JsonNode root = call("/models/" + models.embed() + ":embedContent", body, Duration.ofSeconds(5));
         return toVector(root.path("embedding").path("values"));
     }
 
@@ -54,12 +64,12 @@ public class GeminiEmbeddingClient implements EmbeddingClient {
         List<Object> requests = new ArrayList<>();
         for (String text : texts) {
             Map<String, Object> req = new LinkedHashMap<>();
-            req.put("model", "models/" + ai.embedModel());
+            req.put("model", "models/" + models.embed());
             req.put("content", Map.of("parts", List.of(Map.of("text", text))));
             req.put("outputDimensionality", DIMENSIONS);
             requests.add(req);
         }
-        JsonNode root = call("/models/" + ai.embedModel() + ":batchEmbedContents", Map.of("requests", requests),
+        JsonNode root = call("/models/" + models.embed() + ":batchEmbedContents", Map.of("requests", requests),
                 Duration.ofSeconds(20));
         JsonNode embeddings = root.path("embeddings");
         if (!embeddings.isArray() || embeddings.size() != texts.size()) {
@@ -79,11 +89,11 @@ public class GeminiEmbeddingClient implements EmbeddingClient {
             try {
                 String raw = transport.post(path, json, timeout);
                 JsonNode root = mapper.readTree(raw);
-                callLogger.log(AiFeature.EMBED, ai.embedModel(), elapsedMs(start), true, null, null, null);
+                callLogger.log(AiFeature.EMBED, models.embed(), elapsedMs(start), true, null, null, null);
                 return root;
             } catch (RestClientResponseException e) {
                 int status = e.getStatusCode().value();
-                callLogger.log(AiFeature.EMBED, ai.embedModel(), elapsedMs(start), false, "HTTP_" + status, null,
+                callLogger.log(AiFeature.EMBED, models.embed(), elapsedMs(start), false, "HTTP_" + status, null,
                         null);
                 if ((status == 429 || status == 503) && attempt == 0) {
                     sleep();
@@ -95,7 +105,7 @@ public class GeminiEmbeddingClient implements EmbeddingClient {
                 }
                 throw new AiUnavailableException("HTTP_" + status);
             } catch (ResourceAccessException e) {
-                callLogger.log(AiFeature.EMBED, ai.embedModel(), elapsedMs(start), false, "TIMEOUT", null, null);
+                callLogger.log(AiFeature.EMBED, models.embed(), elapsedMs(start), false, "TIMEOUT", null, null);
                 throw new AiUnavailableException("TIMEOUT", e);
             } catch (JacksonException e) {
                 throw new AiUnavailableException("BAD_JSON", e);
