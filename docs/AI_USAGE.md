@@ -9,6 +9,10 @@ NexHack 3.0 allows AI tools and asks for significant use to be disclosed. This f
 - Claude Code (Anthropic), running Claude Sonnet 5.5, generated the backend, frontend, tests, configuration, seed
   content and documentation from the team's build specification (`STUDYLOOP_BUILD_PROMPT`) and plan.
 
+- Claude Code (Anthropic) was also used for a post-build audit and deployment session on 31 Oct 2026 (see the "Audit"
+  row of the build log): it ran the full test suite and a scripted browser walkthrough of the demo path, fixed the bugs
+  that surfaced, deployed the app to Render with a Supabase database, and updated these docs.
+
 **Inside the product (Gemini models, all configured by environment variable)**
 
 | Role | Model (default) | Used for |
@@ -35,11 +39,13 @@ plan and build specification; the AI implemented them.
 
 ## How the generated work was checked
 
-- Backend: 60 automated tests (`./mvnw verify`) against a real PostgreSQL with pgvector, including the concurrent
-  accept race, refresh-token reuse detection, campus isolation and the Gemini client's retry and fallback policy
-  (run against a local stand-in server).
+- Backend: 72 automated tests (`./mvnw verify`) against a real PostgreSQL with pgvector, including the concurrent
+  accept race, refresh-token reuse detection and its concurrency grace, campus isolation, embedding-space re-embedding
+  and the Gemini client's retry and fallback policy (run against a local stand-in server).
 - Frontend: `npm run typecheck`, `npm run lint` (zero warnings) and `npm run build`.
-- The core loop was clicked through in a browser at desktop and 375 px widths.
+- The core loop was clicked through in a browser at desktop and 375 px widths, then re-run as a scripted Playwright
+  walkthrough (post, radar, hints, switch persona, answer, accept, rate, Pulse, plan, sign-up on both campuses, rapid
+  reloads) with zero console errors, locally and against the deployed site.
 
 **Not verified against the live Gemini API** (no key was available during the build): real model output quality, the
 calibration of the similarity thresholds, and photo transcription. See `docs/ARCHITECTURE.md` section 8.
@@ -61,3 +67,4 @@ real names and real changes rather than filled in by the tool.
 | P7 | Error code mapping, input hygiene, loading, empty and error states, 375 px pass, accessibility pass | _team to record_ |
 | P8 | `ci.yml`, `keepalive.yml`, Dockerfile, `render.yaml`, `vercel.json`, README and the docs in this folder | _team to record_ |
 | P9 | End-to-end verification run on a local stack; fixes found during it | _team to record_ |
+| Audit | Fixes from a full audit: out-of-sync `package-lock.json` that broke `npm ci` in CI; Swagger UI at `/api/docs` returning 401; quick reloads logging users out (15 s refresh reuse grace); vectors from different embedding models being compared after a key is added (V4 `embedding_model` + startup re-embed); Gemini model ids resolved against the live list; demo-ready offline AI (keyword classifier, cited hints, separate thresholds); health gated on seeding; sign-out redirect race; router hydrate warning. Single-service Docker image (Spring Boot serves the SPA), Render + Supabase deployment, docs, submission pack and demo script | _team to record_ |

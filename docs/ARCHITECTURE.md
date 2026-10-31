@@ -7,16 +7,18 @@ describes code that is in this repository.
 
 ```mermaid
 flowchart LR
-    B[Browser] -->|HTTPS| V[Vercel<br/>React 19 SPA]
-    V -->|rewrite /api/*<br/>same-origin cookies| R[Render<br/>Spring Boot 4.1 API]
-    R -->|JDBC| N[(Neon Postgres 16<br/>pgvector + citext)]
+    B[Browser] -->|HTTPS, one origin| R[Render: one Docker service<br/>Spring Boot 4.1 serves the React 19 build<br/>and the REST API under /api]
+    R -->|JDBC over TLS<br/>session pooler| N[(Supabase Postgres<br/>pgvector 0.8 + citext)]
     R -->|REST + structured JSON| G[Gemini API<br/>chat / fast / embedding models]
     GH[GitHub Actions<br/>keepalive] -.->|every 10 min| R
 ```
 
-- **Same-origin by design.** Vercel rewrites `/api/*` to the Render service, so the refresh cookie is first-party. This
-  avoids CORS in production and the third-party-cookie problems in Safari. CORS is only configured for local
-  development without the Vite proxy and for Swagger UI.
+- **Same-origin by design.** The root `Dockerfile` builds the React app and bundles it into the Spring Boot jar, so the
+  UI and `/api` share one origin and the refresh cookie is first-party. This avoids CORS in production and the
+  third-party-cookie problems in Safari. Hashed assets are served with a one-year immutable cache, every other non-API
+  path without a file extension falls back to `index.html`, and `/api/**` is never rewritten (`WebConfig`). The split
+  layout (API-only `backend/Dockerfile` on Render, SPA on Vercel with the `/api` rewrite in `frontend/vercel.json`)
+  still works. CORS is only configured for local development without the Vite proxy.
 - **Polling, not WebSockets.** The bell polls `/api/notifications/unread-count` every 15 seconds. Polling survives
   proxies and free-tier hosting, and a 15 second delay is invisible for "a senior answered your doubt".
 - **No Spring AI or LLM SDK.** Gemini is called with `RestClient`, so timeouts, retries and structured output are
@@ -178,6 +180,12 @@ sequenceDiagram
   `X-Requested-With: StudyLoop` instead of CSRF tokens.
 - Concurrent refreshes from one tab are collapsed into a single request on the client (`refreshSession()` shares one
   promise), otherwise legitimate parallel 401s would look like token reuse.
+- **Reuse grace (15 s).** Some races cannot be fixed on the client: a reload while a refresh is in flight (common while
+  a free-tier instance is waking up) discards the rotated cookie, and two tabs can boot at the same moment. The browser
+  then presents the token that was rotated a moment ago. If that token was rotated less than 15 seconds ago *and* its
+  family still has an active token, `TokenService.rotate` issues a sibling token in the same family instead of
+  revoking it. After logout or a detected reuse the family has no active token, so a replay is rejected exactly as
+  before. This is the same trade-off as the "reuse interval" in Auth0 and Okta refresh-token rotation.
 
 ## 7. Reputation ledger
 
@@ -200,16 +208,23 @@ wins; the partial unique index is the last line of defence.
 The duplicate radar, hint grounding and the semantic matching score depend on cosine similarity, and the right numbers
 depend on the embedding model.
 
-| Setting | Spec default (Gemini) | Fake-AI profile (offline) |
-|---|---|---|
-| `SIM_DUPLICATE_THRESHOLD` | 0.80 | 0.65 |
-| `SIM_GROUNDING_THRESHOLD` | 0.65 | 0.40 |
-| `SIM_SEMANTIC_FLOOR` | 0.50 | 0.25 |
-| `SIM_SEMANTIC_CEIL` | 0.90 | 0.75 |
+| Setting | Gemini (`SIM_*`) | Fake AI, no key (`SIM_FAKE_*`) | Test profile |
+|---|---|---|---|
+| Duplicate threshold | 0.80 | 0.45 | 0.65 |
+| Grounding threshold | 0.65 | 0.30 | 0.40 |
+| Semantic floor | 0.50 | 0.20 | 0.25 |
+| Semantic ceiling | 0.90 | 0.60 | 0.75 |
+
+`AppProperties.similarity()` returns the `SIM_FAKE_*` set automatically whenever `GEMINI_API_KEY` is blank, so a
+deployment without a key still shows the radar, grounded hints and evidence-based routing, and adding a key switches to
+the Gemini set without touching any other variable.
 
 The **Gemini column has not been calibrated against live `gemini-embedding-2` scores** (no API key was available while
-this was built); those are the starting values from the build specification. The **fake profile was measured** on the
-seed data: a paraphrase of the BCNF exemplar scores 0.76, the next-closest unrelated normalization question 0.48.
+this was built); those are the starting values from the build specification. The **fake column was measured** on the
+seeded campus with the bag-of-words fake embedder: a reworded version of the BCNF exemplar scores 0.56 against it while
+the closest non-duplicate (a different normalization question) scores 0.33; a reworded producer-consumer deadlock
+question scores 0.50 against its exemplar and 0.34 against the closest unrelated doubt. Heavy paraphrases with few
+shared words fall below 0.45; that is a limit of the fake embedder, not of the radar.
 
 To calibrate with a real key: collect 10 known-duplicate pairs and 10 unrelated pairs from the seed data, set
 `SIM_DUPLICATE_THRESHOLD` midway between the lowest duplicate and the highest unrelated score,
@@ -222,3 +237,35 @@ accepted-answer similarities. Record the chosen values here:
 | `SIM_GROUNDING_THRESHOLD` | _to be filled after calibration_ | | |
 | `SIM_SEMANTIC_FLOOR` | _to be filled after calibration_ | | |
 | `SIM_SEMANTIC_CEIL` | _to be filled after calibration_ | | |
+
+## 9. Embedding space and model resolution
+
+Vectors are only comparable when the same model produced them. Two situations break that silently: a deployment that
+starts without `GEMINI_API_KEY` (fake vectors) and gets a key later, and a Gemini model being renamed or replaced.
+
+- **Every vector records its model.** `V4__embedding_model.sql` adds `doubts.embedding_model`; `EmbeddingStore`
+  writes the producing model's id (`EmbeddingClient.modelId()`, `fake-bow-768` for the fake) with every vector.
+- **Startup guard.** `EmbeddingSpaceGuard` runs after the demo seeder: it clears every vector whose model differs from
+  the current one, then re-embeds all missing vectors in batches of 50. Cleared rows have `embedding IS NULL`, which
+  every similarity query already excludes, so old and new vectors are never compared even for a moment. If Gemini is
+  unavailable, `EmbeddingBackfillJob` keeps filling them in every two minutes.
+- **Readiness.** `/api/health` answers `503 STARTING` until the seeder and the guard are done, so the platform health
+  check does not send traffic to an empty or half-embedded campus.
+- **Model resolution.** `GeminiModelResolver` lists the Gemini models once at startup and resolves each configured id:
+  the exact id if it is listed with the required method (`generateContent` or `embedContent`), otherwise the closest
+  listed variant (the id with `-preview` added or removed, then the shortest listed id that extends it). A substitution
+  is logged as a warning; nothing is hard-coded, and an unknown id is kept (calls then fail with `AI_CONFIG`, now also
+  for HTTP 404).
+
+## 10. Deployment
+
+| Piece | Where | Notes |
+|---|---|---|
+| App (SPA + API) | Render web service, Docker, Singapore | Root `Dockerfile`: Node 22 builds the SPA, Maven builds the jar with the SPA in `static/`, JRE 21 runs it with `-XX:MaxRAMPercentage=70 -XX:+UseSerialGC` for the 512 MB instance |
+| Database | Supabase Postgres, `ap-southeast-1` | Dedicated `studyloop_app` login role that owns a `studyloop` schema (outside Supabase's public Data API), `search_path = studyloop, extensions`; `vector` and `citext` live in `extensions`. Connected through the IPv4 session pooler with TLS (`sslmode=require`) |
+| Migrations | Flyway V1 to V4 on startup | `ddl-auto=validate`; the demo campus seeds itself on an empty database |
+| Uptime | `.github/workflows/keepalive.yml` | Pings `/api/health` every 10 minutes; GitHub may delay scheduled runs, so an external 5-minute monitor (UptimeRobot) or a paid instance removes cold starts entirely |
+
+Changing hosts only means changing `DATABASE_URL`, `DATABASE_USER` and `DATABASE_PASSWORD` (any Postgres 15+ with
+pgvector and citext works, for example Neon).
+
