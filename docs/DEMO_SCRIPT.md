@@ -29,9 +29,8 @@ Body: `R(A,B,C,D) with FDs AB->C, C->A, AB->D. Is it in BCNF? How should I decom
 
 ### Before recording
 
-- With a Gemini key set, `/api/health` shows `"ai":"GEMINI"`, the hint text is real model output, and Snap transcribes
-  the photo. Without a key the app runs on its offline fallback: the radar, routing and cited hints still work, but the
-  hint text is generic and Snap returns a placeholder transcription. Record the Snap shot only with a key.
+- `/api/health` should show `"ai":"GEMINI"` (the live site runs on Gemini). Hints take 1 to 3 seconds, and Snap
+  transcribes the photo in about 2 seconds.
 - Reset the demo campus between takes so the counts are clean:
 
   ```bash

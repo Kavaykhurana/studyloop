@@ -208,19 +208,19 @@ wins; the partial unique index is the last line of defence.
 The duplicate radar, hint grounding and the semantic matching score depend on cosine similarity, and the right numbers
 depend on the embedding model.
 
-| Setting | Gemini (`SIM_*`) | Fake AI, no key (`SIM_FAKE_*`) | Test profile |
+| Setting | Gemini (`SIM_*`, calibrated) | Fake AI, no key (`SIM_FAKE_*`) | Test profile |
 |---|---|---|---|
-| Duplicate threshold | 0.80 | 0.45 | 0.65 |
-| Grounding threshold | 0.65 | 0.30 | 0.40 |
-| Semantic floor | 0.50 | 0.20 | 0.25 |
-| Semantic ceiling | 0.90 | 0.60 | 0.75 |
+| Duplicate threshold | 0.82 | 0.45 | 0.65 |
+| Grounding threshold | 0.72 | 0.30 | 0.40 |
+| Semantic floor | 0.64 | 0.20 | 0.25 |
+| Semantic ceiling | 0.75 | 0.60 | 0.75 |
 
 `AppProperties.similarity()` returns the `SIM_FAKE_*` set automatically whenever `GEMINI_API_KEY` is blank, so a
 deployment without a key still shows the radar, grounded hints and evidence-based routing, and adding a key switches to
 the Gemini set without touching any other variable.
 
-The **Gemini column has not been calibrated against live `gemini-embedding-2` scores** (no API key was available while
-this was built); those are the starting values from the build specification. The **fake column was measured** on the
+The **Gemini column is calibrated on live `gemini-embedding-2` vectors** of the seeded campus (31 Oct 2026, results
+below; the build specification's starting values were 0.80 / 0.65 / 0.50 / 0.90). The **fake column was measured** on the
 seeded campus with the bag-of-words fake embedder: a reworded version of the BCNF exemplar scores 0.56 against it while
 the closest non-duplicate (a different normalization question) scores 0.33; a reworded producer-consumer deadlock
 question scores 0.50 against its exemplar and 0.34 against the closest unrelated doubt. Heavy paraphrases with few
@@ -233,12 +233,17 @@ collect 10 known-duplicate pairs and 10 unrelated pairs from the seed data, set
 `SIM_GROUNDING_THRESHOLD` 0.10 lower, and `SIM_SEMANTIC_FLOOR`/`CEIL` at the 10th and 90th percentile of all
 accepted-answer similarities. Record the chosen values here:
 
-| Setting | Calibrated value | Date | Who |
+| Setting | Calibrated value | Date | How |
 |---|---|---|---|
-| `SIM_DUPLICATE_THRESHOLD` | _to be filled after calibration_ | | |
-| `SIM_GROUNDING_THRESHOLD` | _to be filled after calibration_ | | |
-| `SIM_SEMANTIC_FLOOR` | _to be filled after calibration_ | | |
-| `SIM_SEMANTIC_CEIL` | _to be filled after calibration_ | | |
+| `SIM_DUPLICATE_THRESHOLD` | 0.82 | 31 Oct 2026 | Midway between the lowest duplicate (0.867) and the highest unrelated score (0.764) |
+| `SIM_GROUNDING_THRESHOLD` | 0.72 | 31 Oct 2026 | Duplicate threshold minus 0.10 |
+| `SIM_SEMANTIC_FLOOR` | 0.64 | 31 Oct 2026 | 10th percentile of the routing signal (n = 332, median 0.681) |
+| `SIM_SEMANTIC_CEIL` | 0.75 | 31 Oct 2026 | 90th percentile of the routing signal |
+
+All 10 reworded duplicates (BST on sorted input, binary search loop, BCNF, COUNT in WHERE, producer-consumer, TLB
+access time, CRC, subnetting, ConcurrentModificationException, at least one six) ranked their seed doubt first, at
+0.867 to 0.941. The 10 unrelated questions topped out at 0.653 to 0.764 (thrashing vs the TLB question, TCP vs UDP
+headers vs the congestion-control question). Clean separation, so the radar can be strict without missing rewordings.
 
 ## 9. Embedding space and model resolution
 
@@ -270,4 +275,24 @@ starts without `GEMINI_API_KEY` (fake vectors) and gets a key later, and a Gemin
 
 Changing hosts only means changing `DATABASE_URL`, `DATABASE_USER` and `DATABASE_PASSWORD` (any Postgres 15+ with
 pgvector and citext works, for example Neon).
+
+## 11. Gemini on the live API: what was measured and what changed
+
+Tested against the live Gemini API on 31 Oct 2026 with the real request shapes (structured JSON output, the hint and
+planner prompts, a photographed notebook page for snap).
+
+| Finding | Measurement | Change |
+|---|---|---|
+| The Gemini 3 chat models think by default | `gemini-3.5-flash` classification: 242 of 256 output tokens spent thinking, output cut off (`MAX_TOKENS`); with 1024 tokens it answered after 32.5 s, far beyond the 6 to 20 s timeouts | Every call sends `thinkingConfig.thinkingLevel` per tier (`GEMINI_CHAT_THINKING=low`, `GEMINI_FAST_THINKING=minimal`): 2.7 s for the same call |
+| Not every model accepts every level | `gemini-3.7-flash`, `gemini-3.8-flash`, `gemini-flash-latest` answer 400 "Thinking level MINIMAL is not supported" | The client steps down (`minimal`, then `low`, then no thinking config) on that specific 400 and remembers the level per model |
+| Full-solution hints were slow on the spec's chat model | Rung 4 (about 500 output tokens): `gemini-3.5-flash` 27 to 35 s; `gemini-3.6-flash` 63 s; `gemini-3.5-flash-lite` 2.0 s (low) and `gemini-3-flash-preview` 2.8 s (minimal), both correct with every required section | Chat model `gemini-3.5-flash-lite`, fast model `gemini-3-flash-preview` |
+| Models get overloaded | `gemini-3.1-flash-lite` (the spec's fast model) and several 3.x Flash models answered 503 "high demand" for the whole session | Fallback works both ways now: chat falls back to fast and fast falls back to chat, so classification no longer depends on one model |
+| The small chat model drifted down the ladder | Rung 2 ("approach") came back as a worked first step; rung 1 applied the student's own FDs | The current rung's rule is restated after the inputs (`Prompts.hintUser`); rerun: nudge, approach bullets, first step only, full solution |
+
+End-to-end on the seeded campus with these settings: classification 4 of 4 correct (DBMS / Normalization, OS / Paging,
+CN / TCP, OOPJ / Collections) and a non-academic post rejected; radar 0.955 for a reworded BCNF doubt and nothing for an
+unrelated question; Rohan routed first with "Solved 4 similar Normalization doubts"; hint rungs in 1.0 to 2.3 s with only
+valid citations and no answer in rungs 1 to 3; snap transcribed the photographed CRC question exactly (bit strings
+included) in 1.3 s; a 5-day DBMS plan within the daily budget with an ask-a-peer task on day 1; AI success rate 100% over
+19 calls (p50 978 ms).
 

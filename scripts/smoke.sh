@@ -4,6 +4,8 @@
 # Waits for the free-tier instance to wake (and, if a sha is given, for that commit to be live), then checks the
 # public pages, API docs, auth guard, demo login, duplicate radar, feed, Pulse and refresh-token rotation.
 # Read-only for demo content: it logs in as the demo learner but never posts, answers or accepts.
+# EXPECT_AI=GEMINI also asserts the AI mode. SMOKE_AI=1 adds a live-AI check from a fresh Open Campus account (invisible
+# to the demo campus): post a doubt without a subject (classification), unlock hint 1 (generation), then delete it.
 set -uo pipefail
 
 BASE="${1:?usage: smoke.sh BASE_URL [EXPECTED_SHA]}"
@@ -33,6 +35,11 @@ while :; do
   fi
   sleep 10
 done
+
+if [ -n "${EXPECT_AI:-}" ]; then
+  mode="$(printf '%s' "$body" | json 'd.get("ai")' 2>/dev/null || true)"
+  [ "$mode" = "$EXPECT_AI" ] && pass "AI mode is $mode" || fail "AI mode is ${mode:-unknown}, expected $EXPECT_AI"
+fi
 
 echo "Public pages"
 code="$(curl -s -o /tmp/sl_landing -w '%{http_code}' "$BASE/")"
@@ -82,6 +89,34 @@ code="$(curl -s -o /dev/null -w '%{http_code}' -c "$JAR" -b "$JAR" "${H[@]}" -X 
 [ "$code" = 200 ] && pass "refresh token rotation" || fail "refresh ($code)"
 code="$(curl -s -o /dev/null -w '%{http_code}' -c "$JAR" -b "$JAR" "${H[@]}" -X POST "$BASE/api/auth/logout")"
 [ "$code" = 204 ] && pass "logout" || fail "logout ($code)"
+
+if [ "${SMOKE_AI:-}" = 1 ]; then
+  echo "Live AI (fresh Open Campus account)"
+  J2="$(mktemp)"
+  stamp="$(date +%s)$RANDOM"
+  signup="$(curl -s -c "$J2" -b "$J2" "${H[@]}" -X POST "$BASE/api/auth/signup" \
+    -d "{\"name\":\"Smoke Check\",\"email\":\"smoke-$stamp@example.com\",\"password\":\"Smoke-$stamp-a1\"}")"
+  T2="$(printf '%s' "$signup" | json 'd["accessToken"]' 2>/dev/null || true)"
+  [ -n "$T2" ] && pass "signup on Open Campus" || fail "signup: ${signup:0:200}"
+  A2=(-H "Authorization: Bearer $T2")
+  start=$SECONDS
+  doubt="$(curl -s --max-time 30 "${H[@]}" "${A2[@]}" -X POST "$BASE/api/doubts" \
+    -d '{"title":"Is R(A,B,C,D) in BCNF when C determines A?","bodyMd":"FDs are AB->C, C->A and AB->D. Sir said every left side must be a superkey, but I am confused about C->A and how to decompose.","source":"TEXT"}')"
+  did="$(printf '%s' "$doubt" | json 'd["id"]' 2>/dev/null || true)"
+  cls="$(printf '%s' "$doubt" | json 'd["subject"]["code"] + " / " + d["topic"]["name"]' 2>/dev/null || true)"
+  [ "${cls%% *}" = DBMS ] && pass "classification: $cls ($((SECONDS - start))s with embedding)" || fail "classification: ${doubt:0:200}"
+  if [ -n "$did" ]; then
+    start=$SECONDS
+    hint="$(curl -s --max-time 40 "${H[@]}" "${A2[@]}" -X POST "$BASE/api/doubts/$did/hints/next")"
+    words="$(printf '%s' "$hint" | json 'len(d["hint"]["contentMd"].split())' 2>/dev/null || true)"
+    leak="$(printf '%s' "$hint" | json '"**Answer:**" in d["hint"]["contentMd"]' 2>/dev/null || true)"
+    [ -n "$words" ] && [ "$leak" = False ] && pass "hint rung 1 generated ($words words, $((SECONDS - start))s, no answer)" \
+      || fail "hint: ${hint:0:200}"
+    code="$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" "${A2[@]}" -X DELETE "$BASE/api/doubts/$did")"
+    [ "$code" = 204 ] && pass "cleanup: doubt deleted" || fail "cleanup ($code)"
+  fi
+  rm -f "$J2"
+fi
 
 echo
 if [ "$FAILS" -eq 0 ]; then echo "All smoke checks passed."; else echo "$FAILS smoke check(s) failed."; exit 1; fi

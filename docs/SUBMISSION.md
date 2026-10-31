@@ -52,8 +52,8 @@ and hints. Campus Pulse shows faculty and class representatives which topics the
 ## Technology stack
 
 Java 21, Spring Boot 4.1, Spring Security 7 (JWT access tokens and rotating refresh tokens with reuse detection),
-Spring Data JPA (Hibernate 7), Flyway, PostgreSQL with pgvector (HNSW) and citext (Supabase), Gemini API (chat, fast and
-embedding models via RestClient with structured JSON output), React 19, TypeScript, Vite, Tailwind CSS v4, TanStack
+Spring Data JPA (Hibernate 7), Flyway, PostgreSQL with pgvector (HNSW) and citext (Supabase), Gemini API (3.5 Flash-Lite, 3 Flash and
+Embedding 2 via RestClient with structured JSON output, per-tier thinking levels and cross-model fallback), React 19, TypeScript, Vite, Tailwind CSS v4, TanStack
 Query, React Router 7, Recharts, JUnit 5 with Testcontainers (72 tests), GitHub Actions, Docker on Render.
 
 ## GitHub repository

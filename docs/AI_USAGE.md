@@ -17,9 +17,12 @@ NexHack 3.0 allows AI tools and asks for significant use to be disclosed. This f
 
 | Role | Model (default) | Used for |
 |---|---|---|
-| Chat | `gemini-3.5-flash` | Hint ladder rungs, "Snap a doubt" (vision), study planner |
-| Fast / fallback | `gemini-3.1-flash-lite` | Doubt classification; fallback when the chat model is rate-limited |
+| Chat | `gemini-3.5-flash-lite` (thinking `low`) | Hint ladder rungs, "Snap a doubt" (vision), study planner; fallback for classification |
+| Fast | `gemini-3-flash-preview` (thinking `minimal`) | Doubt classification; fallback when the chat model is overloaded |
 | Embeddings | `gemini-embedding-2` (768 dimensions) | Duplicate radar, expertise routing, hint grounding |
+
+These replace the build specification's `gemini-3.5-flash` / `gemini-3.1-flash-lite` after measuring them on the live
+API (too slow with default thinking, and overloaded); see `docs/ARCHITECTURE.md` section 11.
 
 Without `GEMINI_API_KEY` the app runs with deterministic fake clients (development and tests only). Uploaded photos
 are sent to Gemini for transcription and are never stored by StudyLoop.
@@ -47,8 +50,10 @@ plan and build specification; the AI implemented them.
   walkthrough (post, radar, hints, switch persona, answer, accept, rate, Pulse, plan, sign-up on both campuses, rapid
   reloads) with zero console errors, locally and against the deployed site.
 
-**Not verified against the live Gemini API** (no key was available during the build): real model output quality, the
-calibration of the similarity thresholds, and photo transcription. See `docs/ARCHITECTURE.md` section 8.
+**Verified against the live Gemini API** (31 Oct 2026): model availability, structured output on every feature, latency
+per feature, hint-ladder behaviour per rung, citation validity, photo transcription, the study planner and the
+similarity thresholds (calibrated, `docs/ARCHITECTURE.md` sections 8 and 11). Model output quality is still model
+output: rungs and plans are checked by validation code, not by a human, on every call.
 
 ## Build log
 
@@ -67,4 +72,5 @@ real names and real changes rather than filled in by the tool.
 | P7 | Error code mapping, input hygiene, loading, empty and error states, 375 px pass, accessibility pass | _team to record_ |
 | P8 | `ci.yml`, `keepalive.yml`, Dockerfile, `render.yaml`, `vercel.json`, README and the docs in this folder | _team to record_ |
 | P9 | End-to-end verification run on a local stack; fixes found during it | _team to record_ |
+| Live AI | With a Gemini key: per-tier thinking levels with automatic step-down (default thinking made calls take 30 s+), chat and fast models chosen by measured latency, cross-model fallback in both directions, rung rule restated in the hint prompt, thresholds calibrated with `scripts/calibrate_similarity.py`, AI end-to-end checks of every feature, deployment with the key | _team to record_ |
 | Audit | Fixes from a full audit: out-of-sync `package-lock.json` that broke `npm ci` in CI; Swagger UI at `/api/docs` returning 401; quick reloads logging users out (15 s refresh reuse grace); vectors from different embedding models being compared after a key is added (V4 `embedding_model` + startup re-embed); Gemini model ids resolved against the live list; demo-ready offline AI (keyword classifier, cited hints, separate thresholds); health gated on seeding; sign-out redirect race; router hydrate warning. Single-service Docker image (Spring Boot serves the SPA), Render + Supabase deployment, docs, submission pack and demo script | _team to record_ |

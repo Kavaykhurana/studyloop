@@ -24,4 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Smoke test the live deployment
+        env:
+          EXPECT_AI: GEMINI
+          SMOKE_AI: "1"
         run: ./scripts/smoke.sh "$BASE_URL" "$GITHUB_SHA"

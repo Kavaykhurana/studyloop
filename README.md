@@ -63,15 +63,15 @@ are claimed here until they are collected).
 
 ## Screenshots
 
-Captured on the seeded demo campus. The hint rungs shown are hand-written seed content; the plan was produced by the
-offline fake planner (no Gemini key was configured).
+Captured on the seeded demo campus with Gemini: the radar scores, routing reasons, hint rungs (with their campus
+citation chips) and the study plan are live model and pgvector output.
 
 | | |
 |---|---|
 | ![Landing](docs/screenshots/landing.jpg) | ![Ask with duplicate radar](docs/screenshots/ask-radar.jpg) |
 | Landing with live (seeded) stats | Duplicate radar finds a solved senior answer |
 | ![Doubt with matched seniors](docs/screenshots/doubt-matches.jpg) | ![Hint ladder](docs/screenshots/hint-ladder.jpg) |
-| Matched seniors with scores and reasons | Hint ladder, rungs 1 and 2 unlocked |
+| Matched seniors with scores and reasons | Hint ladder: a nudge, then approach bullets citing a senior's answer |
 | ![Campus Pulse](docs/screenshots/pulse.jpg) | ![Study plan](docs/screenshots/plan.jpg) |
 | Campus Pulse | Study planner |
 
@@ -132,7 +132,7 @@ plain-English reasons, shown behind "Why this match?".
 | Backend | Java 21 (virtual threads), Spring Boot 4.1, Spring Web MVC, Spring Security 7 with OAuth2 Resource Server (Nimbus HS256) |
 | Persistence | Spring Data JPA (Hibernate 7) for entities, `JdbcTemplate` for vectors and analytics, Flyway migrations with `ddl-auto=validate` |
 | Database | PostgreSQL with `pgvector` and `citext` (Supabase in production, `pgvector/pgvector:pg16` locally and in tests) |
-| AI | Gemini REST API via `RestClient`: chat model, fast model, `gemini-embedding-2` at 768 dimensions (all configurable) |
+| AI | Gemini REST API via `RestClient` with structured JSON output: `gemini-3.5-flash-lite` (hints, snap, planner), `gemini-3-flash-preview` (classification), `gemini-embedding-2` at 768 dimensions; per-tier thinking levels, cross-model fallback (all configurable) |
 | API docs | springdoc-openapi at `/api/docs` |
 | Frontend | React 19, TypeScript (strict), Vite, Tailwind CSS v4, React Router 7, TanStack Query v5, Axios, react-hook-form + zod, react-markdown with rehype-sanitize and highlight, Recharts, sonner |
 | Tests | JUnit 5, Mockito, AssertJ, Testcontainers (`pgvector/pgvector:pg16`) |
@@ -184,9 +184,10 @@ Backend (`backend/.env`, never committed):
 | `COOKIE_SECURE` | false | Set `true` behind HTTPS |
 | `GEMINI_API_KEY` | blank | Blank means fake AI (dev and tests only) |
 | `GEMINI_BASE_URL` | Gemini v1beta | API base |
-| `GEMINI_CHAT_MODEL` / `GEMINI_FAST_MODEL` / `GEMINI_EMBED_MODEL` | `gemini-3.5-flash` / `gemini-3.1-flash-lite` / `gemini-embedding-2` | Models; resolved against Gemini's live model list at startup (a missing id falls back to its closest listed variant, e.g. `-preview`) |
-| `SIM_DUPLICATE_THRESHOLD` / `SIM_GROUNDING_THRESHOLD` | 0.80 / 0.65 | Cosine thresholds (calibrate with a real key) |
-| `SIM_SEMANTIC_FLOOR` / `SIM_SEMANTIC_CEIL` | 0.50 / 0.90 | Rescaling range for the semantic signal |
+| `GEMINI_CHAT_MODEL` / `GEMINI_FAST_MODEL` / `GEMINI_EMBED_MODEL` | `gemini-3.5-flash-lite` / `gemini-3-flash-preview` / `gemini-embedding-2` | Chat: hints, snap, planner. Fast: classification. Each is the other's fallback. Resolved against Gemini's live model list at startup (a missing id falls back to its closest listed variant, e.g. `-preview`). Chosen from latency measurements on the live API (docs/ARCHITECTURE.md, section 11) |
+| `GEMINI_CHAT_THINKING` / `GEMINI_FAST_THINKING` | `low` / `minimal` | Gemini 3 thinking level per tier (blank sends none). Without it these models think for 30 s+ per call; a level a model rejects is stepped down automatically |
+| `SIM_DUPLICATE_THRESHOLD` / `SIM_GROUNDING_THRESHOLD` | 0.82 / 0.72 | Cosine thresholds, calibrated on `gemini-embedding-2` with `scripts/calibrate_similarity.py` |
+| `SIM_SEMANTIC_FLOOR` / `SIM_SEMANTIC_CEIL` | 0.64 / 0.75 | Rescaling range for the semantic signal (10th / 90th percentile of the routing signal) |
 | `SIM_FAKE_DUPLICATE_THRESHOLD` / `SIM_FAKE_GROUNDING_THRESHOLD` / `SIM_FAKE_SEMANTIC_FLOOR` / `SIM_FAKE_SEMANTIC_CEIL` | 0.45 / 0.30 / 0.20 / 0.60 | Same four, used only when `GEMINI_API_KEY` is blank (calibrated for the fake embedder) |
 | `DEMO_MODE` / `SEED_DEMO` | false / false | Enables demo login / seeds the demo campus when empty |
 | `ADMIN_TOKEN` | blank | Enables `POST /api/admin/demo/reset` (header `X-Admin-Token`); blank returns 404 |
