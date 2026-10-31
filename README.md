@@ -171,7 +171,8 @@ The ER model, token rotation, hint ladder design, embedding-space versioning and
 ## The matching algorithm
 
 ```
-score = round(100 * (0.40*semantic + 0.20*declared + 0.20*reputation + 0.20*recency) - 15*load), clamped to 0..100
+raw   = 0.40*semantic + 0.20*declared + 0.20*reputation + 0.20*recency     # each signal in 0..1
+score = clamp(round(100*raw - 15*load), 0, 100)
 ```
 
 | Signal | Why it exists |
@@ -180,7 +181,7 @@ score = round(100 * (0.40*semantic + 0.20*declared + 0.20*reputation + 0.20*rece
 | `declared` (0.20) | Self-rated strength (level / 5). Lets new helpers with no history still be found. |
 | `reputation` (0.20) | `ln(1 + subjectRep) / ln(1 + maxSubjectRep)`. Log scale so one veteran does not drown everyone. |
 | `recency` (0.20) | Active in 24 h = 1.0, 72 h = 0.6, 7 d = 0.3. A great helper who left last month will not answer tonight. |
-| `load` (-15) | Open matches in the last 48 h. Spreads questions instead of burying the best helper. |
+| `load` (-15) | Open matches in the last 48 h, capped at 3 and scaled to 0..1. Spreads questions instead of burying the best helper. |
 
 Ranks 1 to 3 with a score of at least 25 are notified, once. Each match stores the five components and up to three
 plain-English reasons, shown behind "Why this match?".
@@ -318,12 +319,12 @@ committed.
 
 ## Testing
 
+**Backend.** 75 tests run against a real PostgreSQL with pgvector (Testcontainers; set `TEST_DATABASE_URL`,
+`TEST_DATABASE_USER` and `TEST_DATABASE_PASSWORD` to use an existing database when Docker is unavailable).
+
 ```bash
 cd backend && ./mvnw verify
 ```
-
-75 tests run against a real PostgreSQL with pgvector (Testcontainers; set `TEST_DATABASE_URL`, `TEST_DATABASE_USER`
-and `TEST_DATABASE_PASSWORD` to use an existing database when Docker is unavailable).
 
 <details>
 <summary><b>What the backend tests cover</b></summary>
@@ -346,6 +347,8 @@ and `TEST_DATABASE_PASSWORD` to use an existing database when Docker is unavaila
 - The SPA fallback for the single-service build, and public Swagger UI
 
 </details>
+
+**Frontend.** Strict type check, lint and production build:
 
 ```bash
 cd frontend && npm run typecheck && npm run lint && npm run build
