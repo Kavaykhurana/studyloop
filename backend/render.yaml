@@ -24,11 +24,23 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_CHAT_MODEL
-        value: gemini-3.5-flash
+        value: gemini-3.5-flash-lite
       - key: GEMINI_FAST_MODEL
-        value: gemini-3.1-flash-lite
+        value: gemini-3-flash-preview
       - key: GEMINI_EMBED_MODEL
         value: gemini-embedding-2
+      - key: GEMINI_CHAT_THINKING
+        value: low
+      - key: GEMINI_FAST_THINKING
+        value: minimal
+      - key: SIM_DUPLICATE_THRESHOLD
+        value: "0.82"
+      - key: SIM_GROUNDING_THRESHOLD
+        value: "0.72"
+      - key: SIM_SEMANTIC_FLOOR
+        value: "0.64"
+      - key: SIM_SEMANTIC_CEIL
+        value: "0.75"
       - key: COOKIE_SECURE
         value: "true"
       - key: DEMO_MODE

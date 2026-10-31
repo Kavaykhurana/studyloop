@@ -19,11 +19,20 @@ public class GeminiModels {
     private volatile String chat;
     private volatile String fast;
     private volatile String embed;
+    private final String chatThinking;
+    private final String fastThinking;
 
     public GeminiModels(AppProperties.Ai ai) {
         this.chat = ai.chatModel();
         this.fast = ai.fastModel();
         this.embed = ai.embedModel();
+        this.chatThinking = ai.chatThinking() == null ? "" : ai.chatThinking().trim();
+        this.fastThinking = ai.fastThinking() == null ? "" : ai.fastThinking().trim();
+    }
+
+    /** Configured thinking level for a tier; blank means "send no thinking config". */
+    public String thinking(ModelTier tier) {
+        return tier == ModelTier.CHAT ? chatThinking : fastThinking;
     }
 
     public String chat() {

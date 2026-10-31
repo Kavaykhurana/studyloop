@@ -54,14 +54,18 @@ app:
   ai:
     api-key: ${GEMINI_API_KEY:}
     base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
-    chat-model: ${GEMINI_CHAT_MODEL:gemini-3.5-flash}
-    fast-model: ${GEMINI_FAST_MODEL:gemini-3.1-flash-lite}
+    chat-model: ${GEMINI_CHAT_MODEL:gemini-3.5-flash-lite}
+    fast-model: ${GEMINI_FAST_MODEL:gemini-3-flash-preview}
     embed-model: ${GEMINI_EMBED_MODEL:gemini-embedding-2}
+    # Thinking models default to long reasoning (30 s+ per call); these keep every call inside its timeout.
+    chat-thinking: ${GEMINI_CHAT_THINKING:low}
+    fast-thinking: ${GEMINI_FAST_THINKING:minimal}
   similarity:
-    duplicate-threshold: ${SIM_DUPLICATE_THRESHOLD:0.80}
-    grounding-threshold: ${SIM_GROUNDING_THRESHOLD:0.65}
-    semantic-floor: ${SIM_SEMANTIC_FLOOR:0.50}
-    semantic-ceil: ${SIM_SEMANTIC_CEIL:0.90}
+    # Calibrated on gemini-embedding-2 with scripts/calibrate_similarity.py (docs/ARCHITECTURE.md, section 8)
+    duplicate-threshold: ${SIM_DUPLICATE_THRESHOLD:0.82}
+    grounding-threshold: ${SIM_GROUNDING_THRESHOLD:0.72}
+    semantic-floor: ${SIM_SEMANTIC_FLOOR:0.64}
+    semantic-ceil: ${SIM_SEMANTIC_CEIL:0.75}
   # Used only when GEMINI_API_KEY is blank: calibrated for the bag-of-words fake embedder on the seeded campus.
   fake-similarity:
     duplicate-threshold: ${SIM_FAKE_DUPLICATE_THRESHOLD:0.45}

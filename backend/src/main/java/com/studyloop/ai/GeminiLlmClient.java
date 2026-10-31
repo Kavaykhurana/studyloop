@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.ResourceAccessException;
@@ -19,7 +21,7 @@ public class GeminiLlmClient implements LlmClient {
     private static final Logger log = LoggerFactory.getLogger(GeminiLlmClient.class);
     private static final long RETRY_DELAY_MS = 800;
 
-    private enum Kind { TRANSIENT, BAD_OUTPUT, CONFIG }
+    private enum Kind { TRANSIENT, BAD_OUTPUT, CONFIG, THINKING_UNSUPPORTED }
 
     private static final class Failure extends RuntimeException {
         final transient Kind kind;
@@ -33,6 +35,8 @@ public class GeminiLlmClient implements LlmClient {
     }
 
     private final GeminiModels models;
+    /** model|configured level -> level that model accepts ("" = omit thinking config), learned from 400s. */
+    private final Map<String, String> thinkingFallbacks = new ConcurrentHashMap<>();
     private final GeminiTransport transport;
     private final JsonMapper mapper;
     private final AiCallLogger callLogger;
@@ -53,14 +57,15 @@ public class GeminiLlmClient implements LlmClient {
     @Override
     public <T> AiResult<T> generateJson(AiRequest request, Class<T> type) {
         String primary = request.tier() == ModelTier.CHAT ? models.chat() : models.fast();
-        String fallback = models.fast();
+        // The other tier's model is the fallback both ways, so one overloaded model never takes a feature down.
+        String fallback = request.tier() == ModelTier.CHAT ? models.fast() : models.chat();
         Failure failure;
         try {
             return runWithRetry(primary, request, type);
         } catch (Failure f) {
             failure = f;
         }
-        if (failure.kind == Kind.TRANSIENT && request.tier() == ModelTier.CHAT && !fallback.equals(primary)) {
+        if (failure.kind == Kind.TRANSIENT && !fallback.equals(primary)) {
             try {
                 return attempt(fallback, request, type);
             } catch (Failure f) {
@@ -88,12 +93,37 @@ public class GeminiLlmClient implements LlmClient {
         throw last;
     }
 
+    /**
+     * One call, adapting the thinking level: a model that rejects the configured level (Gemini answers 400
+     * "Thinking level ... is not supported") is retried at the next lower setting, and the choice is remembered.
+     */
     private <T> AiResult<T> attempt(String model, AiRequest request, Class<T> type) {
+        String configured = models.thinking(request.tier());
+        String key = model + "|" + configured;
+        for (int i = 0; i < 3; i++) {
+            String level = thinkingFallbacks.getOrDefault(key, configured);
+            try {
+                return attemptOnce(model, request, type, level);
+            } catch (Failure f) {
+                if (f.kind != Kind.THINKING_UNSUPPORTED || level.isEmpty()) {
+                    throw f;
+                }
+                String lower = "minimal".equals(level) ? "low" : "";
+                thinkingFallbacks.put(key, lower);
+                log.warn("Model {} does not support thinking level {}; using {}", model, level,
+                        lower.isEmpty() ? "its default" : lower);
+            }
+        }
+        throw new Failure(Kind.CONFIG, "AI_CONFIG");
+    }
+
+    private <T> AiResult<T> attemptOnce(String model, AiRequest request, Class<T> type, String thinkingLevel) {
         long start = System.nanoTime();
         Integer inTokens = null;
         Integer outTokens = null;
         try {
-            String raw = transport.post("/models/" + model + ":generateContent", body(request), request.timeout());
+            String raw = transport.post("/models/" + model + ":generateContent", body(request, thinkingLevel),
+                    request.timeout());
             JsonNode root = mapper.readTree(raw);
             JsonNode usage = root.path("usageMetadata");
             inTokens = usage.has("promptTokenCount") ? usage.path("promptTokenCount").asInt() : null;
@@ -107,6 +137,9 @@ public class GeminiLlmClient implements LlmClient {
             Failure f;
             if (status == 429 || status >= 500) {
                 f = new Failure(Kind.TRANSIENT, "HTTP_" + status);
+            } else if (status == 400 && !thinkingLevel.isEmpty()
+                    && e.getResponseBodyAsString().toLowerCase(Locale.ROOT).contains("thinking")) {
+                f = new Failure(Kind.THINKING_UNSUPPORTED, "THINKING_LEVEL");
             } else if (status == 400 || status == 403 || status == 404) {
                 log.error("Gemini rejected the request (HTTP {}); check the model name and API key for {}", status,
                         model);
@@ -167,7 +200,7 @@ public class GeminiLlmClient implements LlmClient {
         return s.trim();
     }
 
-    private String body(AiRequest r) {
+    private String body(AiRequest r, String thinkingLevel) {
         List<Object> parts = new ArrayList<>();
         parts.add(Map.of("text", r.userText()));
         if (r.imageBytes() != null) {
@@ -178,6 +211,9 @@ public class GeminiLlmClient implements LlmClient {
         generation.put("responseMimeType", "application/json");
         generation.put("responseJsonSchema", r.responseJsonSchema());
         generation.put("maxOutputTokens", r.maxOutputTokens());
+        if (!thinkingLevel.isEmpty()) {
+            generation.put("thinkingConfig", Map.of("thinkingLevel", thinkingLevel));
+        }
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("systemInstruction", Map.of("parts", List.of(Map.of("text", r.systemPrompt()))));
         body.put("contents", List.of(Map.of("role", "user", "parts", parts)));

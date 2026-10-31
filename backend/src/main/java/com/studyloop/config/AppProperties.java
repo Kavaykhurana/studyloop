@@ -32,7 +32,12 @@ public record AppProperties(
 
     public record Cors(List<String> allowedOrigins) {}
 
-    public record Ai(String apiKey, String baseUrl, String chatModel, String fastModel, String embedModel) {
+    /**
+     * Gemini settings. {@code chatThinking} / {@code fastThinking} are Gemini 3 thinking levels ({@code minimal},
+     * {@code low}, {@code medium}, {@code high}) sent with every call of that tier; blank sends no thinking config.
+     */
+    public record Ai(String apiKey, String baseUrl, String chatModel, String fastModel, String embedModel,
+                     String chatThinking, String fastThinking) {
         public boolean enabled() {
             return apiKey != null && !apiKey.isBlank();
         }

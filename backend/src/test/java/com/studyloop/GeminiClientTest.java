@@ -63,7 +63,7 @@ class GeminiClientTest {
         server.start();
         AppProperties props = new AppProperties(null, null, null,
                 new AppProperties.Ai("test-key", "http://127.0.0.1:" + server.getAddress().getPort(),
-                        "chat-model", "fast-model", "embed-model"), null, null, null, null);
+                        "chat-model", "fast-model", "embed-model", "low", "minimal"), null, null, null, null);
         GeminiTransport transport = new GeminiTransport(HttpClient.newHttpClient(), props);
         AiCallLogger logger = mock(AiCallLogger.class);
         llm = new GeminiLlmClient(props, transport, mapper, logger);
@@ -155,6 +155,45 @@ class GeminiClientTest {
         assertThat(result.model()).isEqualTo("fast-model");
         assertThat(paths).containsExactly("/models/chat-model:generateContent", "/models/chat-model:generateContent",
                 "/models/fast-model:generateContent");
+    }
+
+    @Test
+    void whenTheFastModelIsOverloadedTheChatModelIsTriedOnce() {
+        script = path -> path.contains("fast-model") ? new Reply(503, "{}") : new Reply(200, candidate(CLASSIFY_JSON));
+
+        AiResult<ClassifyResult> result = llm.generateJson(request(ModelTier.FAST), ClassifyResult.class);
+
+        assertThat(result.model()).isEqualTo("chat-model");
+        assertThat(paths).containsExactly("/models/fast-model:generateContent", "/models/fast-model:generateContent",
+                "/models/chat-model:generateContent");
+    }
+
+    @Test
+    void eachTierSendsItsThinkingLevel() {
+        script = path -> new Reply(200, candidate(CLASSIFY_JSON));
+
+        llm.generateJson(request(ModelTier.CHAT), ClassifyResult.class);
+        llm.generateJson(request(ModelTier.FAST), ClassifyResult.class);
+
+        assertThat(bodies.get(0)).contains("\"thinkingConfig\":{\"thinkingLevel\":\"low\"}");
+        assertThat(bodies.get(1)).contains("\"thinkingConfig\":{\"thinkingLevel\":\"minimal\"}");
+    }
+
+    @Test
+    void anUnsupportedThinkingLevelIsSteppedDownAndRemembered() {
+        script = path -> bodies.get(bodies.size() - 1).contains("\"minimal\"")
+                ? new Reply(400, "{\"error\":{\"code\":400,\"message\":\"Thinking level MINIMAL is not supported "
+                        + "for this model. Please retry with other thinking level.\"}}")
+                : new Reply(200, candidate(CLASSIFY_JSON));
+
+        AiResult<ClassifyResult> first = llm.generateJson(request(ModelTier.FAST), ClassifyResult.class);
+        assertThat(first.value().subjectCode()).isEqualTo("DBMS");
+        assertThat(bodies).hasSize(2);
+        assertThat(bodies.get(1)).contains("\"thinkingLevel\":\"low\"");
+
+        llm.generateJson(request(ModelTier.FAST), ClassifyResult.class);
+        assertThat(bodies).hasSize(3);
+        assertThat(bodies.get(2)).contains("\"thinkingLevel\":\"low\"");
     }
 
     @Test

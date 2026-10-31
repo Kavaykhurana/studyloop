@@ -76,8 +76,25 @@ public class Prompts {
                            String previousRungs, String campusKnowledge) {
         return "RUNG: " + rung + "\nSUBJECT: " + subjectName + "\nTOPIC: " + topicName + "\nDOUBT TITLE: " + title
                 + "\nDOUBT BODY:\n" + clip(body) + "\nPREVIOUS RUNGS:\n" + previousRungs
-                + "\nCAMPUS KNOWLEDGE:\n" + campusKnowledge;
+                + "\nCAMPUS KNOWLEDGE:\n" + campusKnowledge
+                + "\n\nWRITE RUNG " + rung + " NOW. " + RUNG_RULES.get(Math.max(1, Math.min(4, rung)) - 1);
     }
+
+    /**
+     * The current rung's rule, restated after the inputs. Measured on the live API: smaller chat models drift toward
+     * solving on rungs 1 and 2 when the rule only appears in the system prompt; restating it keeps the ladder honest.
+     */
+    private static final List<String> RUNG_RULES = List.of(
+            "Nudge only: one or two guiding questions or the single key idea to recall. Do not use the student's "
+                    + "specific values, do not compute or check anything, do not give the answer. Max 60 words.",
+            "Approach only: 3 to 5 short bullet points naming the technique, the order of the steps and one pitfall. "
+                    + "Describe what to do, never do it: no computed results, no worked step, no final values. "
+                    + "Max 120 words.",
+            "First step only: carry out the first meaningful step on the student's exact problem and show it, then "
+                    + "stop and say precisely what to do next. Do not finish the problem. Max 180 words.",
+            "Full solution: the complete worked solution, the final result marked **Answer:**, then one line "
+                    + "starting **Common mistake:** and one line starting **Try this:** with a similar practice "
+                    + "question and no solution. Max 400 words.");
 
     public String planUser(String examName, String examDate, List<String> dates, int dailyBudget,
                            Map<String, List<String>> subjects, Map<String, Integer> needsHelp,
