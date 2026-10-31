@@ -1,0 +1,14 @@
+.git
+.github
+docs
+**/node_modules
+frontend/dist
+frontend/.vite
+backend/target
+backend/src/main/resources/static
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+.idea
+.vscode

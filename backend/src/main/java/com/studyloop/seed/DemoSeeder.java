@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.Ordered;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -38,7 +39,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /** Seeds the TIET demo campus: 25 personas plus 60 doubts and 75 answers of real study content. */
 @Component
-public class DemoSeeder implements ApplicationRunner {
+public class DemoSeeder implements ApplicationRunner, Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(DemoSeeder.class);
     private static final long TIET = 1L;
@@ -79,11 +80,28 @@ public class DemoSeeder implements ApplicationRunner {
         this.clock = clock;
     }
 
+    /** False until the startup seed check has finished, so health checks do not route traffic to an empty campus. */
+    private volatile boolean ready;
+
+    /** After model resolution, before the embedding-space check. */
+    @Override
+    public int getOrder() {
+        return 10;
+    }
+
     @Override
     public void run(ApplicationArguments args) {
-        if (props.demo().seed() && !users.existsByDemoTrue()) {
-            seed();
+        try {
+            if (props.demo().seed() && !users.existsByDemoTrue()) {
+                seed();
+            }
+        } finally {
+            ready = true;
         }
+    }
+
+    public boolean isReady() {
+        return ready;
     }
 
     public synchronized Report seed() {

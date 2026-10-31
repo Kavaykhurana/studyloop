@@ -5,6 +5,8 @@
 
 # backend
 backend/target/
+# React build copied in by the root Dockerfile (single-service image); never committed
+backend/src/main/resources/static/
 backend/.mvn/wrapper/maven-wrapper.jar
 *.log
 
