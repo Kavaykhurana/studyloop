@@ -226,7 +226,9 @@ the closest non-duplicate (a different normalization question) scores 0.33; a re
 question scores 0.50 against its exemplar and 0.34 against the closest unrelated doubt. Heavy paraphrases with few
 shared words fall below 0.45; that is a limit of the fake embedder, not of the radar.
 
-To calibrate with a real key: collect 10 known-duplicate pairs and 10 unrelated pairs from the seed data, set
+To calibrate with a real key, run `GEMINI_API_KEY=... python3 scripts/calibrate_similarity.py` (stdlib only). It embeds
+the seeded campus exactly like the backend does and prints the four values to paste into the environment. By hand:
+collect 10 known-duplicate pairs and 10 unrelated pairs from the seed data, set
 `SIM_DUPLICATE_THRESHOLD` midway between the lowest duplicate and the highest unrelated score,
 `SIM_GROUNDING_THRESHOLD` 0.10 lower, and `SIM_SEMANTIC_FLOOR`/`CEIL` at the 10th and 90th percentile of all
 accepted-answer similarities. Record the chosen values here:
