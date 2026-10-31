@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.studyloop.support.IntegrationTestBase;
 import jakarta.servlet.http.Cookie;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
@@ -87,12 +88,40 @@ class AuthIntegrationTest extends IntegrationTestBase {
         assertThat(second).isNotNull();
         assertThat(second.getValue()).isNotEqualTo(first.getValue());
 
+        clock.advance(Duration.ofSeconds(16));
         MvcResult reuse = refresh(first);
         assertThat(reuse.getResponse().getStatus()).isEqualTo(401);
         assertThat(reuse.getResponse().getContentAsString()).contains("REFRESH_REUSED");
 
         MvcResult afterReuse = refresh(second);
         assertThat(afterReuse.getResponse().getStatus()).isEqualTo(401);
+    }
+
+    @Test
+    void aConcurrentRefreshWithTheJustRotatedTokenKeepsTheSessionInsteadOfLoggingOut() throws Exception {
+        Cookie first = signup("race@thapar.edu").getResponse().getCookie("sl_refresh");
+        Cookie second = refresh(first).getResponse().getCookie("sl_refresh");
+
+        clock.advance(Duration.ofSeconds(3));
+        MvcResult racing = refresh(first);
+        assertThat(racing.getResponse().getStatus()).isEqualTo(200);
+        Cookie sibling = racing.getResponse().getCookie("sl_refresh");
+        assertThat(sibling.getValue()).isNotEqualTo(second.getValue());
+
+        assertThat(refresh(second).getResponse().getStatus()).isEqualTo(200);
+        assertThat(refresh(sibling).getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void theReuseGraceNeverRevivesALoggedOutSession() throws Exception {
+        Cookie first = signup("graceout@thapar.edu").getResponse().getCookie("sl_refresh");
+        Cookie second = refresh(first).getResponse().getCookie("sl_refresh");
+        mvc.perform(post("/api/auth/logout").header("X-Requested-With", "StudyLoop").cookie(second))
+                .andExpect(status().isNoContent());
+
+        MvcResult replay = refresh(first);
+        assertThat(replay.getResponse().getStatus()).isEqualTo(401);
+        assertThat(replay.getResponse().getContentAsString()).contains("REFRESH_REUSED");
     }
 
     @Test

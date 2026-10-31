@@ -52,8 +52,12 @@ public class SecurityConfig {
                                 "/api/auth/logout", "/api/auth/demo").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/admin/demo/reset").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/**", "/api/health").permitAll()
-                        .requestMatchers("/api/docs", "/api/docs/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/docs", "/api/docs/**", "/api/swagger-ui/**", "/api/swagger-ui.html",
+                                "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
+                        // The bundled React app (single-service deploy): static files and client-side routes.
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/**").permitAll()
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(o -> o
                         .jwt(j -> j.jwtAuthenticationConverter(converter))

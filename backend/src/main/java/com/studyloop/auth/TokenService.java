@@ -27,6 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class TokenService {
 
+    /** How long a just-rotated refresh token may still be presented by a concurrent request (see rotate). */
+    static final Duration REUSE_GRACE = Duration.ofSeconds(15);
+
     public record AccessToken(String token, long expiresInSeconds) {}
 
     public record Rotation(String refreshToken, User user) {}
@@ -73,6 +76,11 @@ public class TokenService {
     /**
      * Rotates a refresh token. A token that was already used revokes its whole family (reuse detection).
      * The revoke must commit even though we throw, hence noRollbackFor.
+     *
+     * <p>One exception, the reuse grace: a token rotated less than {@link #REUSE_GRACE} ago, whose family is still
+     * active, is a concurrent refresh from the same browser (a reload while the previous refresh was in flight
+     * discards the new cookie; two tabs booting at once). It gets a fresh token in the same family instead of logging
+     * the user out. After logout or a detected reuse the family has no active token, so the grace never applies.
      */
     @Transactional(noRollbackFor = ApiException.class)
     public Rotation rotate(String rawToken, String userAgent) {
@@ -80,6 +88,11 @@ public class TokenService {
         RefreshToken current = refreshTokens.findByHashForUpdate(sha256Hex(rawToken))
                 .orElseThrow(() -> new ApiException(ErrorCode.REFRESH_INVALID));
         if (current.getRevokedAt() != null) {
+            if (isConcurrentRefresh(current, now)) {
+                User user = users.findById(current.getUserId())
+                        .orElseThrow(() -> new ApiException(ErrorCode.REFRESH_INVALID));
+                return new Rotation(issueRefresh(user.getId(), current.getFamilyId(), userAgent).raw(), user);
+            }
             refreshTokens.revokeFamily(current.getFamilyId(), now);
             throw new ApiException(ErrorCode.REFRESH_REUSED);
         }
@@ -93,6 +106,13 @@ public class TokenService {
         current.setReplacedById(next.entity().getId());
         refreshTokens.save(current);
         return new Rotation(next.raw(), user);
+    }
+
+    private boolean isConcurrentRefresh(RefreshToken token, Instant now) {
+        return token.getReplacedById() != null
+                && token.getRevokedAt().isAfter(now.minus(REUSE_GRACE))
+                && token.getExpiresAt().isAfter(now)
+                && refreshTokens.existsByFamilyIdAndRevokedAtIsNullAndExpiresAtAfter(token.getFamilyId(), now);
     }
 
     @Transactional
