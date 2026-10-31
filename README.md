@@ -8,7 +8,7 @@ who has actually solved problems like yours.
 [![Live demo](https://img.shields.io/badge/live%20demo-studyloop--bi2z.onrender.com-4338CA)](https://studyloop-bi2z.onrender.com)
 [![API docs](https://img.shields.io/badge/API%20docs-%2Fapi%2Fdocs-0F766E)](https://studyloop-bi2z.onrender.com/api/docs)
 
-NexHack 3.0 · Track 2: Education and Student Innovation
+NexHack 3.0 · Track 2: Education and Student Innovation · Team AlphaFire
 
 ## Live demo
 
@@ -256,9 +256,14 @@ including what is and is not verified against the live Gemini API, is in [docs/A
 
 ## Team and contributions
 
-| Member | Role | Contributed |
+Team **AlphaFire**
+
+| Member | Role | Owned |
 |---|---|---|
-| _name_ | _role_ | _one line, taken from docs/CONTRIBUTIONS.md_ |
+| Kavay Khurana (team leader) | Backend core and backend AI | Product plan and build spec; auth, doubts, answers, reputation ledger, notifications; Gemini layer, duplicate radar, matching, hint ladder, planner, Pulse, seed campus; deployment |
+| Gurliv Singh | Frontend | The React app: landing and demo personas, Ask flow with radar and Snap, doubt page with hint ladder and matches, feed, Pulse, planner, design system |
+| Harshit Atal | Backend AI and frontend | AI features end to end: radar, matching with "Why this match?", hint ladder, planner, Pulse |
+| Tanveer Singh | Design, content and pitch | Docs, seeded campus content, survey, demo video, Unstop submission |
 
 Details per member: [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md).
 

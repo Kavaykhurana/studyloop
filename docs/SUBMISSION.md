@@ -1,7 +1,7 @@
 # NexHack 3.0 submission pack
 
-Paste-ready text for every Unstop field. Fields marked **(team)** need details only the team has: the video link and
-member names. Everything else is final.
+Paste-ready text for every Unstop field for **Team AlphaFire**. Only the field marked **(team)** still needs something
+from the team: the video link. Everything else is final.
 
 ## Project name
 
@@ -72,7 +72,15 @@ contribution is in `docs/CONTRIBUTIONS.md`.
 
 ## Team contributions
 
-**(team)** One line per member, copied from `docs/CONTRIBUTIONS.md`.
+- **Kavay Khurana (team leader):** Backend core and backend AI: product plan and build spec; auth, doubts, answers,
+  reputation ledger and notifications; Gemini layer, duplicate radar, expertise matching, hint ladder, study planner,
+  Campus Pulse and the seeded campus; deployment on Render with Supabase.
+- **Gurliv Singh:** Frontend: the React app: landing page and demo personas, Ask flow with radar and Snap, doubt page
+  with hint ladder and matched seniors, feed, Pulse, planner and the design system.
+- **Harshit Atal:** Backend AI and frontend: the AI features end to end: duplicate radar, matching with its "Why this
+  match?" breakdown, hint ladder, study planner and Campus Pulse.
+- **Tanveer Singh:** Design, content and pitch: documentation, seeded campus content (60 doubts, 75 answers), survey,
+  demo video and the Unstop submission.
 
 ## Before pressing submit
 
