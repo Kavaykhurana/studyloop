@@ -14,7 +14,9 @@ NexHack 3.0 · Track 2: Education and Student Innovation · Team AlphaFire
 
 **https://studyloop-bi2z.onrender.com** - click **Try as a learner** or **Try as a helper**. No signup needed.
 
-Demo video: _add the unlisted YouTube link here_
+Demo video (3 minutes, narrated): [docs/demo/studyloop-demo.mp4](docs/demo/studyloop-demo.mp4), which plays in the
+browser on GitHub. It walks the whole loop on the seeded campus with live Gemini output; the narration is an AI voice
+(Gemini text-to-speech).
 
 First-load note: on free hosting the server sleeps when idle and can take up to two minutes to wake on the first visit.
 Once it is up, everything is instant.
@@ -25,9 +27,6 @@ Engineering students at Indian colleges get stuck late at night before mid-sems 
 noisy batch WhatsApp groups, where a doubt is buried within minutes, the same doubt is asked every semester and nothing
 is searchable; seniors they do not know how to reach; or a general chatbot that hands over the final answer, which helps
 them submit but not learn. Knowledge that seniors already shared once is lost every year.
-
-Survey highlights from real students are in [docs/SURVEY.md](docs/SURVEY.md) (the team adds the numbers there; none
-are claimed here until they are collected).
 
 ## The solution
 
@@ -270,7 +269,7 @@ Team **AlphaFire**
 | Kavay Khurana (team leader) | Backend core and backend AI | Product plan and build spec; auth, doubts, answers, reputation ledger, notifications; Gemini layer, duplicate radar, matching, hint ladder, planner, Pulse, seed campus; deployment |
 | Gurliv Singh | Frontend | The React app: landing and demo personas, Ask flow with radar and Snap, doubt page with hint ladder and matches, feed, Pulse, planner, design system |
 | Harshit Atal | Backend AI and frontend | AI features end to end: radar, matching with "Why this match?", hint ladder, planner, Pulse |
-| Tanveer Singh | Design, content and pitch | Docs, seeded campus content, survey, demo video, Unstop submission |
+| Tanveer Singh | Design, content and pitch | Docs, seeded campus content, demo video, Unstop submission |
 
 Details per member: [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md).
 

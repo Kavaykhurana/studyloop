@@ -1,7 +1,6 @@
 # NexHack 3.0 submission pack
 
-Paste-ready text for every Unstop field for **Team AlphaFire**. Only the field marked **(team)** still needs something
-from the team: the video link. Everything else is final.
+Paste-ready text for every Unstop field for **Team AlphaFire**. Everything below is final.
 
 ## Project name
 
@@ -68,7 +67,7 @@ contribution is in `docs/CONTRIBUTIONS.md`.
 - Live: https://studyloop-bi2z.onrender.com. Click "Try as a learner"; no signup needed. On free hosting the first load
   can take up to two minutes while the server wakes.
 - API docs: https://studyloop-bi2z.onrender.com/api/docs
-- Video: **(team)** unlisted YouTube link. The script is in `docs/DEMO_SCRIPT.md`.
+- Video (3 minutes, narrated): https://github.com/Kavaykhurana/studyloop/blob/main/docs/demo/studyloop-demo.mp4
 
 ## Team contributions
 
@@ -79,8 +78,8 @@ contribution is in `docs/CONTRIBUTIONS.md`.
   with hint ladder and matched seniors, feed, Pulse, planner and the design system.
 - **Harshit Atal:** Backend AI and frontend: the AI features end to end: duplicate radar, matching with its "Why this
   match?" breakdown, hint ladder, study planner and Campus Pulse.
-- **Tanveer Singh:** Design, content and pitch: documentation, seeded campus content (60 doubts, 75 answers), survey,
-  demo video and the Unstop submission.
+- **Tanveer Singh:** Design, content and pitch: documentation, seeded campus content (60 doubts, 75 answers), demo
+  video and the Unstop submission.
 
 ## Requirement checklist
 
@@ -93,20 +92,20 @@ Every item NexHack 3.0 asks for, and where it lives:
 | Project description and key features | This file; README "Key features" (with how each is built) |
 | GitHub repository | https://github.com/Kavaykhurana/studyloop |
 | README with setup instructions and technology stack | README "Run locally", "Environment variables", "Tech stack" |
-| Demo video or working demo link | Live: https://studyloop-bi2z.onrender.com (one-click demo); video: **(team)** |
+| Demo video or working demo link | Both. Live: https://studyloop-bi2z.onrender.com (one-click demo). Video: `docs/demo/studyloop-demo.mp4` |
 | Each team member's contribution | This file, "Team contributions"; `docs/CONTRIBUTIONS.md` |
 
 | Rule | How the project complies |
 |---|---|
 | Libraries, APIs, frameworks and open-source components used with appropriate attribution | `docs/ATTRIBUTION.md`, linked from the README |
 | Significant AI assistance disclosed | `docs/AI_USAGE.md`, linked from the README |
-| No misrepresentation | Demo data is labelled as seeded on every metric screen; no invented survey numbers or statistics |
+| No misrepresentation | Demo data is labelled as seeded on every metric screen; no invented statistics; the narrated video discloses its AI voice |
 
 ## Before pressing submit
 
 1. Open the live link in an incognito window on mobile data. Wait for the landing page, then click "Try as a learner"
    and check that the dashboard loads.
 2. Open `/api/docs` and `/api/health` (it should say `"status":"UP"`).
-3. Play the video while logged out of YouTube.
+3. Open the video link in a logged-out window and check that it plays.
 4. Check that the repository is public, the default branch has the latest code, and the CI badge is green.
 5. Take a screenshot of the Unstop confirmation.

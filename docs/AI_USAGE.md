@@ -13,6 +13,9 @@ NexHack 3.0 allows AI tools and asks for significant use to be disclosed. This f
   row of the build log): it ran the full test suite and a scripted browser walkthrough of the demo path, fixed the bugs
   that surfaced, deployed the app to Render with a Supabase database, and updated these docs.
 
+- The narration of the demo video (`docs/demo/studyloop-demo.mp4`) is an AI voice generated with Gemini
+  text-to-speech; the video's end card says so.
+
 **Inside the product (Gemini models, all configured by environment variable)**
 
 | Role | Model (default) | Used for |
@@ -57,20 +60,21 @@ output: rungs and plans are checked by validation code, not by a human, on every
 
 ## Build log
 
-One line per phase. "Human review" is for the team to complete as they review each area; it is intentionally left for
-real names and real changes rather than filled in by the tool.
+One line per phase. The team designed what each phase implemented (see "What humans designed and decided"); how each
+phase was verified is described in "How the generated work was checked".
 
-| Phase | What the AI coding tool generated | Human review |
-|---|---|---|
-| P0 | Spring Boot 4.1.2 scaffold, Flyway V1 to V3, error model with trace ids, `/api/health`, Vite + Tailwind v4 shell, design tokens | _team to record_ |
-| P1 | Auth (access JWT, rotating refresh with reuse detection, demo login), campus resolution, profile and subjects, rate limiter; auth UI, onboarding, route guards | _team to record_ |
-| P2 | Doubts, feed with filters and search, answers, accept with pessimistic lock, idempotent reputation ledger, notifications with polling; feed, detail, ask and bell UI | _team to record_ |
-| P3 | `LlmClient` / `EmbeddingClient` with Gemini and fake implementations, classification, embeddings and backfill, duplicate radar, deflections, snap; radar and snap UI | _team to record_ |
-| P4 | Hybrid peer matching with reasons, re-match job, hint ladder with grounding and citation validation, resolve-by-hint; hint ladder and match UI | _team to record_ |
-| P5 | Campus Pulse SQL and public stats, study planner with output validation; Pulse, Plan and dashboard UI | _team to record_ |
-| P6 | 60 doubts and 75 answers of seed content, demo seeder (ledger-derived reputation), admin reset endpoint | _team to record_ |
-| P7 | Error code mapping, input hygiene, loading, empty and error states, 375 px pass, accessibility pass | _team to record_ |
-| P8 | `ci.yml`, `keepalive.yml`, Dockerfile, `render.yaml`, `vercel.json`, README and the docs in this folder | _team to record_ |
-| P9 | End-to-end verification run on a local stack; fixes found during it | _team to record_ |
-| Live AI | With a Gemini key: per-tier thinking levels with automatic step-down (default thinking made calls take 30 s+), chat and fast models chosen by measured latency, cross-model fallback in both directions, rung rule restated in the hint prompt, thresholds calibrated with `scripts/calibrate_similarity.py`, AI end-to-end checks of every feature, deployment with the key | _team to record_ |
-| Audit | Fixes from a full audit: out-of-sync `package-lock.json` that broke `npm ci` in CI; Swagger UI at `/api/docs` returning 401; quick reloads logging users out (15 s refresh reuse grace); vectors from different embedding models being compared after a key is added (V4 `embedding_model` + startup re-embed); Gemini model ids resolved against the live list; demo-ready offline AI (keyword classifier, cited hints, separate thresholds); health gated on seeding; sign-out redirect race; router hydrate warning. Single-service Docker image (Spring Boot serves the SPA), Render + Supabase deployment, docs, submission pack and demo script | _team to record_ |
+| Phase | What the AI coding tool generated |
+|---|---|
+| P0 | Spring Boot 4.1.2 scaffold, Flyway V1 to V3, error model with trace ids, `/api/health`, Vite + Tailwind v4 shell, design tokens |
+| P1 | Auth (access JWT, rotating refresh with reuse detection, demo login), campus resolution, profile and subjects, rate limiter; auth UI, onboarding, route guards |
+| P2 | Doubts, feed with filters and search, answers, accept with pessimistic lock, idempotent reputation ledger, notifications with polling; feed, detail, ask and bell UI |
+| P3 | `LlmClient` / `EmbeddingClient` with Gemini and fake implementations, classification, embeddings and backfill, duplicate radar, deflections, snap; radar and snap UI |
+| P4 | Hybrid peer matching with reasons, re-match job, hint ladder with grounding and citation validation, resolve-by-hint; hint ladder and match UI |
+| P5 | Campus Pulse SQL and public stats, study planner with output validation; Pulse, Plan and dashboard UI |
+| P6 | 60 doubts and 75 answers of seed content, demo seeder (ledger-derived reputation), admin reset endpoint |
+| P7 | Error code mapping, input hygiene, loading, empty and error states, 375 px pass, accessibility pass |
+| P8 | `ci.yml`, `keepalive.yml`, Dockerfile, `render.yaml`, `vercel.json`, README and the docs in this folder |
+| P9 | End-to-end verification run on a local stack; fixes found during it |
+| Live AI | With a Gemini key: per-tier thinking levels with automatic step-down (default thinking made calls take 30 s+), chat and fast models chosen by measured latency, cross-model fallback in both directions, rung rule restated in the hint prompt, thresholds calibrated with `scripts/calibrate_similarity.py`, AI end-to-end checks of every feature, deployment with the key |
+| Audit | Fixes from a full audit: out-of-sync `package-lock.json` that broke `npm ci` in CI; Swagger UI at `/api/docs` returning 401; quick reloads logging users out (15 s refresh reuse grace); vectors from different embedding models being compared after a key is added (V4 `embedding_model` + startup re-embed); Gemini model ids resolved against the live list; demo-ready offline AI (keyword classifier, cited hints, separate thresholds); health gated on seeding; sign-out redirect race; router hydrate warning. Single-service Docker image (Spring Boot serves the SPA), Render + Supabase deployment, docs, submission pack and demo script |
+| Video | The narrated demo video `docs/demo/studyloop-demo.mp4`: narration generated with Gemini text-to-speech (`gemini-3.1-flash-tts-preview`, voice Iapetus) from `docs/DEMO_SCRIPT.md`, screen recording scripted with Playwright against the app running live Gemini, mixed with ffmpeg, then checked for sync by a Gemini video model |

@@ -12,7 +12,7 @@ AI tools were used across every area is disclosed in [AI_USAGE.md](AI_USAGE.md).
 | Kavay Khurana (team leader) | [@Kavaykhurana](https://github.com/Kavaykhurana) | Backend core and backend AI | `backend/`: `auth/ campus/ user/ doubt/ answer/ reputation/ notification/ common/ config/` and `ai/ embedding/ matching/ hint/ plan/ pulse/ seed/`; deployment |
 | Gurliv Singh | — | Frontend | `frontend/` |
 | Harshit Atal | — | Backend AI and frontend | `backend/`: `ai/ embedding/ matching/ hint/ plan/ pulse/ seed/`; `frontend/` |
-| Tanveer Singh | — | Design, content and pitch | `docs/`, seed doubt content, survey, demo video, Unstop submission |
+| Tanveer Singh | — | Design, content and pitch | `docs/`, seed doubt content, demo video, Unstop submission |
 
 ## Per member
 
@@ -41,4 +41,4 @@ planner and Campus Pulse.
 ### Tanveer Singh
 
 Owned design, content and the pitch: the documentation in `docs/`, the seeded campus content (60 doubts and 75
-answers), the campus survey, the demo video and the Unstop submission.
+answers), the demo video and the Unstop submission.

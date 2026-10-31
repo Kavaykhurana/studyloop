@@ -1,5 +1,9 @@
 # Demo video: narration script
 
+A finished, narrated version of this script is already in the repository: `docs/demo/studyloop-demo.mp4` (3:08, AI voice
+via Gemini text-to-speech, recorded with live Gemini output). Use this script only if you want to re-record it with a
+team member's voice.
+
 One presenter, one take per scene, recorded on the live site while they talk. The full version runs about **3:20**; the
 **3:00 cut** is at the end. Every on-screen moment below was rehearsed on the live stack with Gemini: the match
 percentages, labels, notification texts and reputation numbers are what actually appears.
@@ -83,8 +87,6 @@ Each scene: what to do on screen, then what to say. **Bold** words carry the str
 
 > It's eleven at night, the day before a **DBMS mid-sem**. My doubt in the batch WhatsApp group gets **buried in two
 > minutes**, even though a senior solved this **exact doubt** last year.
-
-If your survey is done, add one sentence here with the real figures from `docs/SURVEY.md`, and only then.
 
 ### Scene 2: StudyLoop (0:13 to 0:30)
 
@@ -242,7 +244,7 @@ with the whole loop, Pulse, Snap and the tech close intact.
 1. **Hook (20 s).** "It's 11 PM, your DBMS doubt is stuck, and the batch group is asleep. StudyLoop already knows a
    senior who solved it."
 2. **Problem (30 s).** WhatsApp groups bury doubts, the same doubts come back every semester, seniors are unreachable,
-   and chatbots hand over answers instead of teaching. Add survey numbers only if they were collected.
+   and chatbots hand over answers instead of teaching.
 3. **The loop (60 s, live).** Radar, then post, then routed seniors with reasons, then hint ladder with citations, then
    answer and accept. Every accepted answer makes the next doubt easier.
 4. **Why it's hard (40 s).** Evidence-based matching instead of self-declared levels; hints that never leak the answer
