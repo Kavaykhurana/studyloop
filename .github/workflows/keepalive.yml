@@ -1,9 +1,27 @@
 name: keepalive
+
+# Scheduled: ping /api/health every 10 minutes so the free Render instance is warm when judges click.
+# Manual (Actions -> keepalive -> Run workflow): full post-deploy smoke test against the live site, after waiting for
+# the commit you run it on to be the one deployed.
 on:
   schedule: [ { cron: "*/10 * * * *" } ]
   workflow_dispatch: {}
+
+env:
+  BASE_URL: https://studyloop-bi2z.onrender.com
+
 jobs:
   ping:
+    if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
-      - run: curl -fsS --max-time 90 https://studyloop-api.onrender.com/api/health || true
+      - run: curl -fsS --max-time 90 "$BASE_URL/api/health" || true
+
+  smoke:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Smoke test the live deployment
+        run: ./scripts/smoke.sh "$BASE_URL" "$GITHUB_SHA"

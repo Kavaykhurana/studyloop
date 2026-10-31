@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://studyloop-api.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://studyloop-bi2z.onrender.com/api/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
