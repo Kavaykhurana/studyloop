@@ -254,6 +254,13 @@ scripts/smoke.sh https://studyloop-bi2z.onrender.com
 AI tools were used heavily to build this project, and Gemini models power several product features. Full disclosure,
 including what is and is not verified against the live Gemini API, is in [docs/AI_USAGE.md](docs/AI_USAGE.md).
 
+## Credits and attribution
+
+StudyLoop is built on open-source components and external APIs, each used under its own licence: Spring Boot, Spring
+Security, Hibernate, Flyway, PostgreSQL with pgvector, React, TanStack Query, Tailwind CSS, Recharts and others, the
+Google Gemini API, and the Bricolage Grotesque, Inter and JetBrains Mono typefaces. The full list with versions and
+licences is in [docs/ATTRIBUTION.md](docs/ATTRIBUTION.md).
+
 ## Team and contributions
 
 Team **AlphaFire**

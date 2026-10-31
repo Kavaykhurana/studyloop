@@ -82,6 +82,26 @@ contribution is in `docs/CONTRIBUTIONS.md`.
 - **Tanveer Singh:** Design, content and pitch: documentation, seeded campus content (60 doubts, 75 answers), survey,
   demo video and the Unstop submission.
 
+## Requirement checklist
+
+Every item NexHack 3.0 asks for, and where it lives:
+
+| Unstop requirement | Where |
+|---|---|
+| Project name and selected track | This file, top: StudyLoop, Education and Student Innovation |
+| Problem statement and proposed solution | This file; README "The problem" and "The solution" |
+| Project description and key features | This file; README "Key features" (with how each is built) |
+| GitHub repository | https://github.com/Kavaykhurana/studyloop |
+| README with setup instructions and technology stack | README "Run locally", "Environment variables", "Tech stack" |
+| Demo video or working demo link | Live: https://studyloop-bi2z.onrender.com (one-click demo); video: **(team)** |
+| Each team member's contribution | This file, "Team contributions"; `docs/CONTRIBUTIONS.md` |
+
+| Rule | How the project complies |
+|---|---|
+| Libraries, APIs, frameworks and open-source components used with appropriate attribution | `docs/ATTRIBUTION.md`, linked from the README |
+| Significant AI assistance disclosed | `docs/AI_USAGE.md`, linked from the README |
+| No misrepresentation | Demo data is labelled as seeded on every metric screen; no invented survey numbers or statistics |
+
 ## Before pressing submit
 
 1. Open the live link in an incognito window on mobile data. Wait for the landing page, then click "Try as a learner"
