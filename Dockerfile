@@ -1,6 +1,5 @@
 # Single-service image (what Render runs): the React app is built and bundled into the Spring Boot jar, so the UI and
 # /api share one origin — the HttpOnly refresh cookie stays first-party (Safari-safe) and no CORS is involved.
-# backend/Dockerfile is still there for an API-only deployment behind a separate frontend host.
 
 FROM node:22-alpine AS web
 WORKDIR /web

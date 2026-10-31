@@ -16,9 +16,8 @@ flowchart LR
 - **Same-origin by design.** The root `Dockerfile` builds the React app and bundles it into the Spring Boot jar, so the
   UI and `/api` share one origin and the refresh cookie is first-party. This avoids CORS in production and the
   third-party-cookie problems in Safari. Hashed assets are served with a one-year immutable cache, every other non-API
-  path without a file extension falls back to `index.html`, and `/api/**` is never rewritten (`WebConfig`). The split
-  layout (API-only `backend/Dockerfile` on Render, SPA on Vercel with the `/api` rewrite in `frontend/vercel.json`)
-  still works. CORS is only configured for local development without the Vite proxy.
+  path without a file extension falls back to `index.html`, and `/api/**` is never rewritten (`WebConfig`). CORS is
+  only configured for local development without the Vite proxy.
 - **Polling, not WebSockets.** The bell polls `/api/notifications/unread-count` every 15 seconds. Polling survives
   proxies and free-tier hosting, and a 15 second delay is invisible for "a senior answered your doubt".
 - **No Spring AI or LLM SDK.** Gemini is called with `RestClient`, so timeouts, retries and structured output are

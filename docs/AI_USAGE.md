@@ -32,7 +32,7 @@ are sent to Gemini for transcription and are never stored by StudyLoop.
 
 ## What AI generated
 
-Almost all source code in `backend/` and `frontend/`, the SQL migrations, the test suites, the Docker, Render, Vercel
+Almost all source code in `backend/` and `frontend/`, the SQL migrations, the test suites, the Docker, Render
 and GitHub Actions configuration, the demo seed content (60 doubts and 75 answers, including the worked numerical
 examples, which were computed with scripts rather than by hand), and the documentation in this repository.
 
@@ -73,7 +73,7 @@ phase was verified is described in "How the generated work was checked".
 | P5 | Campus Pulse SQL and public stats, study planner with output validation; Pulse, Plan and dashboard UI |
 | P6 | 60 doubts and 75 answers of seed content, demo seeder (ledger-derived reputation), admin reset endpoint |
 | P7 | Error code mapping, input hygiene, loading, empty and error states, 375 px pass, accessibility pass |
-| P8 | `ci.yml`, `keepalive.yml`, Dockerfile, `render.yaml`, `vercel.json`, README and the docs in this folder |
+| P8 | `ci.yml`, `keepalive.yml`, Dockerfile, `render.yaml`, `vercel.json` (removed once the app moved to a single Render service), README and the docs in this folder |
 | P9 | End-to-end verification run on a local stack; fixes found during it |
 | Live AI | With a Gemini key: per-tier thinking levels with automatic step-down (default thinking made calls take 30 s+), chat and fast models chosen by measured latency, cross-model fallback in both directions, rung rule restated in the hint prompt, thresholds calibrated with `scripts/calibrate_similarity.py`, AI end-to-end checks of every feature, deployment with the key |
 | Audit | Fixes from a full audit: out-of-sync `package-lock.json` that broke `npm ci` in CI; Swagger UI at `/api/docs` returning 401; quick reloads logging users out (15 s refresh reuse grace); vectors from different embedding models being compared after a key is added (V4 `embedding_model` + startup re-embed); Gemini model ids resolved against the live list; demo-ready offline AI (keyword classifier, cited hints, separate thresholds); health gated on seeding; sign-out redirect race; router hydrate warning. Single-service Docker image (Spring Boot serves the SPA), Render + Supabase deployment, docs, submission pack and demo script |

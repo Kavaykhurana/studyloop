@@ -1,7 +1,6 @@
 # Render Blueprint for the deployment that is live: one Docker web service built from the repository root
 # (the root Dockerfile bundles the React app into the Spring Boot jar, so UI and /api share one origin).
-# Paths are relative to the repository root. For an API-only service use dockerContext: backend and
-# dockerfilePath: ./backend/Dockerfile, and host the frontend separately (frontend/vercel.json).
+# Paths are relative to the repository root.
 services:
   - type: web
     name: studyloop

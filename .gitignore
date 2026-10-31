@@ -15,10 +15,17 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
-# tooling
+# tooling and IDEs
 .idea/
+*.iml
+*.iws
+*.ipr
 .vscode/
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
 .DS_Store
-graphify-out/cache/
-graphify-out/*.json
-graphify-out/*.html

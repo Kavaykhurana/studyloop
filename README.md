@@ -85,8 +85,7 @@ flowchart LR
 ```
 
 The React app is built inside the same Docker image and served by Spring Boot, so the UI and the API share one origin:
-the `HttpOnly` refresh cookie is first-party (works in Safari), and there is no CORS in production. `backend/Dockerfile`
-plus `frontend/vercel.json` still support the split layout (API on Render, SPA on Vercel with an `/api` rewrite).
+the `HttpOnly` refresh cookie is first-party (works in Safari), and there is no CORS in production.
 
 ```mermaid
 sequenceDiagram
