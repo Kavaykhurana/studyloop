@@ -209,7 +209,7 @@ git commit.
 cd backend && ./mvnw verify
 ```
 
-72 tests against a real PostgreSQL with pgvector (Testcontainers; set `TEST_DATABASE_URL`, `TEST_DATABASE_USER` and
+75 tests against a real PostgreSQL with pgvector (Testcontainers; set `TEST_DATABASE_URL`, `TEST_DATABASE_USER` and
 `TEST_DATABASE_PASSWORD` to use an existing database when Docker is unavailable). Covered: signup, login and refresh
 rotation with reuse detection and the concurrent-refresh grace; campus isolation; accept with a concurrent race (exactly one winner, ledger equals
 reputation); idempotent reputation; duplicate radar; peer matching (ranking, load, reasons, notify-once); hint ladder

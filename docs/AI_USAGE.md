@@ -42,7 +42,7 @@ plan and build specification; the AI implemented them.
 
 ## How the generated work was checked
 
-- Backend: 72 automated tests (`./mvnw verify`) against a real PostgreSQL with pgvector, including the concurrent
+- Backend: 75 automated tests (`./mvnw verify`) against a real PostgreSQL with pgvector, including the concurrent
   accept race, refresh-token reuse detection and its concurrency grace, campus isolation, embedding-space re-embedding
   and the Gemini client's retry and fallback policy (run against a local stand-in server).
 - Frontend: `npm run typecheck`, `npm run lint` (zero warnings) and `npm run build`.

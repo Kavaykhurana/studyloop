@@ -18,7 +18,7 @@ line and keep the story.
 | 1:20–1:45 | Unlock hint 1 (nudge), then hint 2 with the `From #…` citation chip; click the chip | "While you wait, the hint ladder makes you think first. Hints are grounded in your seniors' accepted answers, and they cite them." |
 | 1:45–2:00 | Click **Switch to Rohan Mehta (helper)** in the banner. Open the bell, open the doubt, post an answer. Switch back, click **Accept answer**, rate 5 stars | "A senior answers, the learner accepts, and that answer now powers the next student's radar and hints. That's the loop." |
 | 2:00–2:15 | **Pulse**: stat tiles, daily chart, confusion map. Click the Normalization bar, which opens the filtered feed. Keep the seeded-data note visible | "Campus Pulse shows faculty exactly where the batch is stuck this week." |
-| 2:15–2:40 | README architecture diagram, then `/api/docs` (Swagger), then the green CI badge | "Java 21 and Spring Boot with pgvector on Postgres, Gemini with structured output and fallbacks, rotating refresh tokens with reuse detection, and 72 integration tests on a real database." |
+| 2:15–2:40 | README architecture diagram, then `/api/docs` (Swagger), then the green CI badge | "Java 21 and Spring Boot with pgvector on Postgres, Gemini with structured output and fallbacks, rotating refresh tokens with reuse detection, and 75 integration tests on a real database." |
 | 2:40–3:00 | **Ask a doubt**, then the **Snap it** tab: photograph a handwritten CRC question and it gets transcribed. End card: live link and repo URL | "Even a photo of your notebook works. Try it now, no signup." |
 
 ### Text to type at 0:30
@@ -50,6 +50,6 @@ Body: `R(A,B,C,D) with FDs AB->C, C->A, AB->D. Is it in BCNF? How should I decom
    answer and accept. Every accepted answer makes the next doubt easier.
 4. **Why it's hard (40 s).** Evidence-based matching instead of self-declared levels; hints that never leak the answer
    in rungs 1 to 3 and only cite real campus doubts; an idempotent reputation ledger with a race-safe accept; embedding
-   versioning so vectors from different models are never compared; 72 integration tests on real Postgres.
+   versioning so vectors from different models are never compared; 75 integration tests on real Postgres.
 5. **Impact (30 s).** Self-serve rate and time to first answer per campus, a confusion map for faculty, and new colleges
    join by email domain with zero setup.
