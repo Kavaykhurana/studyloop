@@ -66,7 +66,7 @@ contribution is in `docs/CONTRIBUTIONS.md`.
 ## Demo
 
 - Live: https://studyloop-bi2z.onrender.com. Click "Try as a learner"; no signup needed. On free hosting the first load
-  can take up to a minute to wake the server.
+  can take up to two minutes while the server wakes.
 - API docs: https://studyloop-bi2z.onrender.com/api/docs
 - Video: **(team)** unlisted YouTube link. The script is in `docs/DEMO_SCRIPT.md`.
 

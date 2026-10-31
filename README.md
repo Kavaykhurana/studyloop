@@ -16,7 +16,8 @@ NexHack 3.0 · Track 2: Education and Student Innovation
 
 Demo video: _add the unlisted YouTube link here_
 
-First-load note: the API may take up to a minute to wake if idle (free hosting). Once it is up, everything is instant.
+First-load note: on free hosting the server sleeps when idle and can take up to two minutes to wake on the first visit.
+Once it is up, everything is instant.
 
 ## The problem
 
