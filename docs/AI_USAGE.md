@@ -13,7 +13,7 @@ NexHack 3.0 allows AI tools and asks for significant use to be disclosed. This f
   row of the build log): it ran the full test suite and a scripted browser walkthrough of the demo path, fixed the bugs
   that surfaced, deployed the app to Render with a Supabase database, and updated these docs.
 
-- The narration of the demo video (`docs/demo/studyloop-demo.mp4`) is an AI voice generated with Gemini
+- The narration of the demo video (published on YouTube with the submission) is an AI voice generated with Gemini
   text-to-speech; the video's end card says so.
 
 **Inside the product (Gemini models, all configured by environment variable)**
@@ -77,4 +77,4 @@ phase was verified is described in "How the generated work was checked".
 | P9 | End-to-end verification run on a local stack; fixes found during it |
 | Live AI | With a Gemini key: per-tier thinking levels with automatic step-down (default thinking made calls take 30 s+), chat and fast models chosen by measured latency, cross-model fallback in both directions, rung rule restated in the hint prompt, thresholds calibrated with `scripts/calibrate_similarity.py`, AI end-to-end checks of every feature, deployment with the key |
 | Audit | Fixes from a full audit: out-of-sync `package-lock.json` that broke `npm ci` in CI; Swagger UI at `/api/docs` returning 401; quick reloads logging users out (15 s refresh reuse grace); vectors from different embedding models being compared after a key is added (V4 `embedding_model` + startup re-embed); Gemini model ids resolved against the live list; demo-ready offline AI (keyword classifier, cited hints, separate thresholds); health gated on seeding; sign-out redirect race; router hydrate warning. Single-service Docker image (Spring Boot serves the SPA), Render + Supabase deployment, docs, submission pack and demo script |
-| Video | The narrated demo video `docs/demo/studyloop-demo.mp4`: narration generated with Gemini text-to-speech (`gemini-3.1-flash-tts-preview`, voice Iapetus) from `docs/DEMO_SCRIPT.md`, screen recording scripted with Playwright against the app running live Gemini, mixed with ffmpeg, then checked for sync by a Gemini video model |
+| Video | The narrated demo video (published on YouTube): narration generated with Gemini text-to-speech (`gemini-3.1-flash-tts-preview`, voice Iapetus) from `docs/hackathon/DEMO_SCRIPT.md`, screen recording scripted with Playwright against the app running live Gemini, mixed with ffmpeg, then checked for sync by a Gemini video model |

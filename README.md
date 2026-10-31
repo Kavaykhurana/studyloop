@@ -1,34 +1,95 @@
-# StudyLoop
+<div align="center">
 
-**Every doubt solved once, solved for everyone.** StudyLoop turns each doubt solved on campus into knowledge for the next
-student: it checks whether your doubt is already solved, gives you hints before answers, and routes you to the senior
-who has actually solved problems like yours.
+<img src="docs/assets/banner.png" alt="StudyLoop: every doubt solved once, solved for everyone" width="100%">
 
-[![CI](https://github.com/Kavaykhurana/studyloop/actions/workflows/ci.yml/badge.svg)](https://github.com/Kavaykhurana/studyloop/actions/workflows/ci.yml)
-[![Live demo](https://img.shields.io/badge/live%20demo-studyloop--bi2z.onrender.com-4338CA)](https://studyloop-bi2z.onrender.com)
-[![API docs](https://img.shields.io/badge/API%20docs-%2Fapi%2Fdocs-0F766E)](https://studyloop-bi2z.onrender.com/api/docs)
+<p>
+  <a href="https://github.com/Kavaykhurana/studyloop/actions/workflows/ci.yml"><img src="https://github.com/Kavaykhurana/studyloop/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://studyloop-bi2z.onrender.com"><img src="https://img.shields.io/badge/demo-live-4338CA?logo=render&logoColor=white" alt="Live demo"></a>
+  <a href="https://studyloop-bi2z.onrender.com/api/docs"><img src="https://img.shields.io/badge/API_docs-OpenAPI-85EA2D?logo=swagger&logoColor=black" alt="API docs"></a>
+  <img src="https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white" alt="Java 21">
+  <img src="https://img.shields.io/badge/Spring_Boot-4.1-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot 4.1">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19">
+  <img src="https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL with pgvector">
+  <img src="https://img.shields.io/badge/Gemini-API-8E75B2?logo=googlegemini&logoColor=white" alt="Google Gemini API">
+</p>
 
-NexHack 3.0 · Track 2: Education and Student Innovation · Team AlphaFire
+**[Live demo](https://studyloop-bi2z.onrender.com)** · **[API docs](https://studyloop-bi2z.onrender.com/api/docs)** · **[Architecture](docs/ARCHITECTURE.md)** · **[Run locally](#getting-started)** · **[Team](#team)**
 
-## Live demo
+<sub>Built by Team AlphaFire for NexHack 3.0 · Track 2: Education and Student Innovation</sub>
 
-**https://studyloop-bi2z.onrender.com** - click **Try as a learner** or **Try as a helper**. No signup needed.
+</div>
 
-Demo video (3 minutes, narrated): [docs/demo/studyloop-demo.mp4](docs/demo/studyloop-demo.mp4), which plays in the
-browser on GitHub. It walks the whole loop on the seeded campus with live Gemini output; the narration is an AI voice
-(Gemini text-to-speech).
+<br>
 
-First-load note: on free hosting the server sleeps when idle and can take up to two minutes to wake on the first visit.
-Once it is up, everything is instant.
+StudyLoop turns every doubt solved on campus into knowledge for the next student. It checks whether your doubt is
+already solved, makes you think with hints before it shows an answer, and routes you to the senior who has actually
+solved problems like yours. Each accepted answer then powers the radar and the hints for whoever asks next.
+
+<details>
+<summary><b>Table of contents</b></summary>
+
+- [The problem](#the-problem)
+- [Try it](#try-it)
+- [How it works](#how-it-works)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Architecture](#architecture)
+- [The matching algorithm](#the-matching-algorithm)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [API](#api)
+- [Security](#security)
+- [AI usage disclosure](#ai-usage-disclosure)
+- [Team](#team)
+- [Acknowledgements](#acknowledgements)
+- [Roadmap](#roadmap)
+
+</details>
 
 ## The problem
 
 Engineering students at Indian colleges get stuck late at night before mid-sems and lab evaluations. Their options are
-noisy batch WhatsApp groups, where a doubt is buried within minutes, the same doubt is asked every semester and nothing
-is searchable; seniors they do not know how to reach; or a general chatbot that hands over the final answer, which helps
-them submit but not learn. Knowledge that seniors already shared once is lost every year.
+noisy batch WhatsApp groups, where a doubt is buried within minutes, the same doubt comes back every semester and
+nothing is searchable; seniors they do not know how to reach; or a general chatbot that hands over the final answer,
+which helps them submit but not learn. The knowledge seniors shared once is lost every year.
 
-## The solution
+## Try it
+
+Open **[studyloop-bi2z.onrender.com](https://studyloop-bi2z.onrender.com)** and click **Try as a learner** or **Try as a
+helper**. No signup is needed: both personas belong to a seeded demo campus with 60 doubts and 75 answers, and every AI
+feature runs on live Gemini.
+
+> [!NOTE]
+> The free Render instance sleeps when idle, so the first visit can take up to two minutes to wake it. After that,
+> everything responds instantly.
+
+A two-minute tour:
+
+1. **Try as a learner**, then **Ask a doubt** with the title `How do I check if a relation is in BCNF with two candidate
+   keys?`. Before anything is posted, the duplicate radar finds the senior answer that already solves it.
+2. Ask something it has not seen and post it. The doubt page shows the matched seniors with **Why this match?** and a
+   hint ladder that cites campus answers.
+3. Click **Switch to Rohan Mehta (helper)** in the demo bar, answer the doubt, switch back and accept the answer.
+   Reputation is awarded, and the answer joins the knowledge base.
+4. Open **Pulse** for the campus confusion map and **Plan** for an AI study plan built from your doubts.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A([Ask a doubt]) --> R{Duplicate<br/>radar}
+    R -->|solved before| S["Senior's accepted<br/>answer, instantly"]
+    R -->|new| P[Post]
+    P -->|while you wait| H[Hint ladder]
+    P -->|notify top 3| M[Matched<br/>seniors]
+    M --> AC[Answer<br/>accepted]
+    AC --> KB[(Campus<br/>knowledge base)]
+    KB -.->|powers the next student's<br/>radar, hints and matches| R
+```
 
 1. **Ask.** Type a doubt (Markdown and code supported) or snap a photo of your notebook; Gemini transcribes it into an
    editable doubt.
@@ -40,18 +101,18 @@ them submit but not learn. Knowledge that seniors already shared once is lost ev
    recent activity and current load. The top three are notified, and every match shows why.
 5. **Answer, then accept.** A helper answers, the learner accepts, reputation is awarded through an idempotent ledger,
    and the doubt joins the campus knowledge base that powers the next student's radar and hints. That is the loop.
-6. **Campus Pulse.** A live dashboard: doubts posted, solved rate, share solved without waiting for a peer, median time
-   to first answer, and a confusion map of which topics students are stuck on this week.
+6. **Campus Pulse.** Doubts posted, solved rate, share solved without waiting for a peer, median time to first answer,
+   and a confusion map of the topics students are stuck on this week.
 7. **Study planner.** A dated plan to an exam, built from your weak subjects and your own recent doubts, with tickable
    tasks.
 
-## Key features
+## Features
 
 | Feature | What it does | How it's built |
 |---|---|---|
 | Duplicate radar | Shows solved senior doubts that match yours before you post | pgvector cosine search over 768-d Gemini embeddings, HNSW index, campus-scoped |
 | Socratic hint ladder | Four rungs that make you think before you see the answer | Gemini structured output, rungs cached per doubt, citations validated against the ids supplied |
-| Explainable routing | Ranks helpers by evidence, shows the reasons and a score breakdown | Hybrid score of semantic proof, declared level, subject reputation, recency and load (see below) |
+| Explainable routing | Ranks helpers by evidence, shows the reasons and a score breakdown | Hybrid score of semantic proof, declared level, subject reputation, recency and load ([below](#the-matching-algorithm)) |
 | Snap a doubt | Photo to editable doubt | Gemini vision, magic-byte validation, image never stored |
 | Reputation ledger | Points for accepted, fast and well-rated answers | Append-only `reputation_events`, `ON CONFLICT DO NOTHING`, pessimistic lock on accept |
 | Notifications | Matched, new answer, answer accepted | In-app, 15 s polling (no WebSockets by design) |
@@ -104,7 +165,8 @@ sequenceDiagram
     API-->>U: 201 doubt + matches
 ```
 
-More diagrams (ER model, token rotation, hint ladder design) are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The ER model, token rotation, hint ladder design, embedding-space versioning and live API measurements are in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## The matching algorithm
 
@@ -136,12 +198,50 @@ plain-English reasons, shown behind "Why this match?".
 | Tests | JUnit 5, Mockito, AssertJ, Testcontainers (`pgvector/pgvector:pg16`) |
 | Delivery | One Docker image on Render (SPA + API), GitHub Actions (`ci.yml`, `keepalive.yml`) |
 
-## Run locally
+## Project structure
 
-Prerequisites: Java 21, Node 22, Docker.
+```
+studyloop/
+├── backend/                          Spring Boot API (Java 21, Maven)
+│   └── src/
+│       ├── main/java/com/studyloop/
+│       │   ├── auth/                 access tokens, rotating refresh tokens, reuse detection
+│       │   ├── campus/               campus resolved from the email domain
+│       │   ├── user/ subject/        profiles, subject strengths, subject catalogue
+│       │   ├── doubt/ answer/        doubts, feed and search; answers and the race-safe accept
+│       │   ├── reputation/           idempotent reputation ledger
+│       │   ├── notification/         in-app notifications
+│       │   ├── ai/                   Gemini client, prompts, JSON schemas, snap, offline fake AI
+│       │   ├── embedding/            pgvector store, backfill job, embedding-space guard
+│       │   ├── matching/             helper ranking and "Why this match?" reasons
+│       │   ├── hint/ plan/ pulse/    hint ladder, study planner, Campus Pulse analytics
+│       │   ├── seed/                 demo campus seeder and reset endpoint
+│       │   ├── common/ config/       errors, rate limits, security, SPA serving
+│       │   └── health/               /api/health: readiness, AI mode, deployed commit
+│       ├── main/resources/           application.yml, Flyway migrations V1 to V4, seed doubts
+│       └── test/                     unit and Testcontainers integration tests
+├── frontend/                         React 19, TypeScript, Vite, Tailwind CSS v4
+│   └── src/
+│       ├── pages/                    one file per screen: landing, ask, doubt, feed, pulse, plan
+│       ├── components/               doubts, plan, pulse, layout and the UI kit
+│       ├── hooks/                    TanStack Query hooks per resource
+│       └── lib/                      API client, auth context, shared types
+├── docs/                             architecture, AI usage, attribution, contributions
+│   ├── assets/ screenshots/          banner and app screenshots
+│   └── hackathon/                    NexHack submission pack and demo script
+├── scripts/                          smoke.sh (post-deploy checks), calibrate_similarity.py
+├── .github/workflows/                ci.yml, keepalive.yml (warm-up ping, live smoke test)
+├── Dockerfile                        builds the SPA and bundles it into the Spring Boot jar
+├── render.yaml                       Render Blueprint for the live service
+└── docker-compose.yml                local PostgreSQL 16 with pgvector
+```
+
+## Getting started
+
+Prerequisites: Java 21, Node 22 and Docker.
 
 ```bash
-# 1. Database (Postgres 16 with pgvector)
+# 1. Database (PostgreSQL 16 with pgvector)
 docker compose up -d
 
 # 2. Backend
@@ -160,19 +260,30 @@ npm run dev
 Open http://localhost:5173. With `DEMO_MODE=true` and `SEED_DEMO=true` (the defaults in `.env.example`) the demo campus
 is seeded on first start and the landing page buttons log you in as the demo learner or helper.
 
-Without `GEMINI_API_KEY` the app runs with **deterministic fake AI** so everything works offline: a keyword classifier
-picks the subject and topic, a bag-of-words embedder powers the radar and routing, and hints are rung-shaped and cite
-the closest campus answer. The fake embedder scores lower than Gemini, so a separate, automatically applied threshold set
-(`SIM_FAKE_*`) is used whenever no key is configured. Add a key and the Gemini thresholds apply; on the next start every
-stored vector made by another model is re-embedded automatically (see "Embedding space" in
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
+> [!TIP]
+> No Gemini key is needed to run it. Without `GEMINI_API_KEY` the app uses **deterministic fake AI**, so everything
+> works offline: a keyword classifier picks the subject and topic, a bag-of-words embedder powers the radar and routing,
+> and hints are rung-shaped and cite the closest campus answer. A separate threshold set (`SIM_FAKE_*`) applies
+> automatically because the fake embedder scores lower than Gemini. Add a key and the Gemini thresholds apply; on the
+> next start every stored vector made by another model is re-embedded automatically (see "Embedding space" in
+> [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
 
-Single-service build (what Render runs): `docker build -t studyloop . && docker run -p 8080:8080 --env-file backend/.env studyloop`,
-then open http://localhost:8080.
+To run the single-service image that Render runs:
 
-## Environment variables
+```bash
+docker build -t studyloop . && docker run -p 8080:8080 --env-file backend/.env studyloop
+```
 
-Backend (`backend/.env`, never committed):
+Then open http://localhost:8080.
+
+## Configuration
+
+All configuration comes from environment variables. For local development they live in `backend/.env`, which is never
+committed.
+
+<details>
+<summary><b>Backend environment variables</b></summary>
+<br>
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -192,14 +303,18 @@ Backend (`backend/.env`, never committed):
 | `ALLOWED_ORIGINS` | `http://localhost:5173` | CORS, local development only |
 | `SERVER_PORT` | 8080 | Port (Render's `PORT` overrides it in Docker) |
 
-Frontend: `VITE_API_PROXY_TARGET` (dev proxy target, default `http://localhost:8080`) and optional `VITE_GITHUB_URL`
-(footer link).
+</details>
 
-## API docs
+<details>
+<summary><b>Frontend environment variables</b></summary>
+<br>
 
-Interactive OpenAPI docs are public at **[https://studyloop-bi2z.onrender.com/api/docs](https://studyloop-bi2z.onrender.com/api/docs)** (JSON at `/api/docs/openapi.json`).
-Health: [https://studyloop-bi2z.onrender.com/api/health](https://studyloop-bi2z.onrender.com/api/health) returns the database state, the AI mode (`GEMINI` or `FAKE`) and the deployed
-git commit.
+| Variable | Default | Purpose |
+|---|---|---|
+| `VITE_API_PROXY_TARGET` | `http://localhost:8080` | Dev-server proxy target for `/api` |
+| `VITE_GITHUB_URL` | none | Optional footer link |
+
+</details>
 
 ## Testing
 
@@ -207,14 +322,30 @@ git commit.
 cd backend && ./mvnw verify
 ```
 
-75 tests against a real PostgreSQL with pgvector (Testcontainers; set `TEST_DATABASE_URL`, `TEST_DATABASE_USER` and
-`TEST_DATABASE_PASSWORD` to use an existing database when Docker is unavailable). Covered: signup, login and refresh
-rotation with reuse detection and the concurrent-refresh grace; campus isolation; accept with a concurrent race (exactly one winner, ledger equals
-reputation); idempotent reputation; duplicate radar; peer matching (ranking, load, reasons, notify-once); hint ladder
-caching, citation validation and AI outage; study plan trimming and validation; rate limiting; the feed query budget
-(three SQL statements for twenty doubts); error response shape; snap upload validation; the Gemini client's request
-shape, retry, fallback and error mapping against a local stand-in server; Gemini model-id resolution; embedding-space
-re-embedding after a model change; the SPA fallback for the single-service build; and public Swagger UI.
+75 tests run against a real PostgreSQL with pgvector (Testcontainers; set `TEST_DATABASE_URL`, `TEST_DATABASE_USER`
+and `TEST_DATABASE_PASSWORD` to use an existing database when Docker is unavailable).
+
+<details>
+<summary><b>What the backend tests cover</b></summary>
+<br>
+
+- Signup, login and refresh rotation with reuse detection and the concurrent-refresh grace
+- Campus isolation
+- Accept under a concurrent race: exactly one winner, and the ledger equals reputation
+- Idempotent reputation
+- Duplicate radar
+- Peer matching: ranking, load, reasons, notify-once
+- Hint ladder caching, citation validation and AI outage
+- Study plan trimming and validation
+- Rate limiting
+- The feed query budget: three SQL statements for twenty doubts
+- Error response shape and snap upload validation
+- The Gemini client's request shape, retry, fallback and error mapping against a local stand-in server
+- Gemini model-id resolution
+- Embedding-space re-embedding after a model change
+- The SPA fallback for the single-service build, and public Swagger UI
+
+</details>
 
 ```bash
 cd frontend && npm run typecheck && npm run lint && npm run build
@@ -222,14 +353,34 @@ cd frontend && npm run typecheck && npm run lint && npm run build
 
 CI runs both on every push and pull request to `main` and `dev`.
 
-Post-deploy smoke test against the live site (landing, SPA fallback, Swagger, auth guard, demo login, duplicate radar,
-feed, Pulse, refresh rotation): run **Actions → keepalive → Run workflow**, or locally:
+## Deployment
+
+The live site runs as one Docker web service on Render (free plan, Singapore) with a Supabase Postgres database.
+
+- **Image.** The root [`Dockerfile`](Dockerfile) builds the React app with Node 22, bundles it into the Spring Boot jar
+  with Maven, and runs it on a Temurin 21 JRE, so the UI and the API share one origin.
+- **Blueprint.** [`render.yaml`](render.yaml) describes the service as a Render Blueprint: the health check on
+  `/api/health`, auto-deploy and every environment variable. Secrets (`DATABASE_*`, `GEMINI_API_KEY`) are entered in
+  the Render dashboard, never committed; a Blueprint deploy generates `JWT_SECRET` and `ADMIN_TOKEN`.
+- **Database.** Supabase Postgres through the session pooler, in a dedicated `studyloop` schema with its own role.
+  Flyway migrates it on startup, and the demo campus is seeded when empty.
+- **Keepalive and smoke test.** [`keepalive.yml`](.github/workflows/keepalive.yml) pings the site every 10 minutes so
+  it stays warm. A manual run (**Actions → keepalive → Run workflow**) executes [`scripts/smoke.sh`](scripts/smoke.sh)
+  against production: landing, SPA fallback, Swagger, auth guard, demo login, duplicate radar, feed, Pulse and refresh
+  rotation, plus a live Gemini check (classification and a hint) from a throwaway account. It also runs locally:
 
 ```bash
 scripts/smoke.sh https://studyloop-bi2z.onrender.com
 ```
 
-## Security notes
+## API
+
+Interactive OpenAPI docs are public at **[/api/docs](https://studyloop-bi2z.onrender.com/api/docs)** (JSON at
+`/api/docs/openapi.json`). **[/api/health](https://studyloop-bi2z.onrender.com/api/health)** returns the database state,
+the AI mode (`GEMINI` or `FAKE`) and the deployed git commit, and answers 503 until the seeder and the embedding guard
+are ready.
+
+## Security
 
 - **Tokens.** Access JWTs (15 min, HS256) live only in browser memory. The refresh token is an opaque 32-byte value in
   an `HttpOnly`, `SameSite=Lax`, path-scoped cookie; only its SHA-256 is stored.
@@ -245,34 +396,35 @@ scripts/smoke.sh https://studyloop-bi2z.onrender.com
 - **Input.** Markdown is stored raw and rendered through `rehype-sanitize`; bodies containing `<script` are rejected.
 - **Rate limits** on login, signup, posting, answering, search, hints, snap and plans, with `Retry-After`.
 - **No image storage.** Uploaded photos are validated by magic bytes, kept in memory, sent to Gemini and discarded.
-- **No secrets in the repo.** Everything comes from environment variables; `.env` files are git-ignored.
+- **No secrets in the repository.** Everything comes from environment variables; `.env` files are git-ignored.
 
 ## AI usage disclosure
 
-AI tools were used heavily to build this project, and Gemini models power several product features. Full disclosure,
-including what is and is not verified against the live Gemini API, is in [docs/AI_USAGE.md](docs/AI_USAGE.md).
+AI tools were used heavily to build this project, and Gemini models power several product features. The full
+disclosure, including what is and is not verified against the live Gemini API, is in
+[docs/AI_USAGE.md](docs/AI_USAGE.md).
 
-## Credits and attribution
+## Team
 
-StudyLoop is built on open-source components and external APIs, each used under its own licence: Spring Boot, Spring
-Security, Hibernate, Flyway, PostgreSQL with pgvector, React, TanStack Query, Tailwind CSS, Recharts and others, the
-Google Gemini API, and the Bricolage Grotesque, Inter and JetBrains Mono typefaces. The full list with versions and
-licences is in [docs/ATTRIBUTION.md](docs/ATTRIBUTION.md).
-
-## Team and contributions
-
-Team **AlphaFire**
+**Team AlphaFire**
 
 | Member | Role | Owned |
 |---|---|---|
-| Kavay Khurana (team leader) | Backend core and backend AI | Product plan and build spec; auth, doubts, answers, reputation ledger, notifications; Gemini layer, duplicate radar, matching, hint ladder, planner, Pulse, seed campus; deployment |
+| Kavay Khurana (team leader) · [@Kavaykhurana](https://github.com/Kavaykhurana) | Backend core and backend AI | Product plan and build spec; auth, doubts, answers, reputation ledger, notifications; Gemini layer, duplicate radar, matching, hint ladder, planner, Pulse, seed campus; deployment |
 | Gurliv Singh | Frontend | The React app: landing and demo personas, Ask flow with radar and Snap, doubt page with hint ladder and matches, feed, Pulse, planner, design system |
 | Harshit Atal | Backend AI and frontend | AI features end to end: radar, matching with "Why this match?", hint ladder, planner, Pulse |
 | Tanveer Singh | Design, content and pitch | Docs, seeded campus content, demo video, Unstop submission |
 
 Details per member: [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md).
 
-## What's next
+## Acknowledgements
+
+StudyLoop is built on open-source components and external APIs, each used under its own licence: Spring Boot, Spring
+Security, Hibernate, Flyway, PostgreSQL with pgvector, React, TanStack Query, Tailwind CSS, Recharts and others, the
+Google Gemini API, and the Bricolage Grotesque, Inter and JetBrains Mono typefaces. The full list with versions and
+licences is in [docs/ATTRIBUTION.md](docs/ATTRIBUTION.md).
+
+## Roadmap
 
 - Multi-college rollout through email domains (the campus model already supports it).
 - A faculty view of the confusion map, so a class representative can act on it.

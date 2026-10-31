@@ -1,8 +1,7 @@
 # Demo video: narration script
 
-A finished, narrated version of this script is already in the repository: `docs/demo/studyloop-demo.mp4` (3:08, AI voice
-via Gemini text-to-speech, recorded with live Gemini output). Use this script only if you want to re-record it with a
-team member's voice.
+A finished, narrated version of this script (3:08, AI voice via Gemini text-to-speech, recorded with live Gemini
+output) is published on YouTube with the submission. Use this script only to re-record it with a team member's voice.
 
 One presenter, one take per scene, recorded on the live site while they talk. The full version runs about **3:20**; the
 **3:00 cut** is at the end. Every on-screen moment below was rehearsed on the live stack with Gemini: the match

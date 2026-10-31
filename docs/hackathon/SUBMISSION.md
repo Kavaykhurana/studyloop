@@ -67,7 +67,7 @@ contribution is in `docs/CONTRIBUTIONS.md`.
 - Live: https://studyloop-bi2z.onrender.com. Click "Try as a learner"; no signup needed. On free hosting the first load
   can take up to two minutes while the server wakes.
 - API docs: https://studyloop-bi2z.onrender.com/api/docs
-- Video (3 minutes, narrated): https://github.com/Kavaykhurana/studyloop/blob/main/docs/demo/studyloop-demo.mp4
+- Video (3 minutes, narrated): the unlisted YouTube URL of the narrated demo
 
 ## Team contributions
 
@@ -88,11 +88,11 @@ Every item NexHack 3.0 asks for, and where it lives:
 | Unstop requirement | Where |
 |---|---|
 | Project name and selected track | This file, top: StudyLoop, Education and Student Innovation |
-| Problem statement and proposed solution | This file; README "The problem" and "The solution" |
-| Project description and key features | This file; README "Key features" (with how each is built) |
+| Problem statement and proposed solution | This file; README "The problem" and "How it works" |
+| Project description and key features | This file; README "Features" (with how each is built) |
 | GitHub repository | https://github.com/Kavaykhurana/studyloop |
-| README with setup instructions and technology stack | README "Run locally", "Environment variables", "Tech stack" |
-| Demo video or working demo link | Both. Live: https://studyloop-bi2z.onrender.com (one-click demo). Video: `docs/demo/studyloop-demo.mp4` |
+| README with setup instructions and technology stack | README "Getting started", "Configuration", "Tech stack" |
+| Demo video or working demo link | Both. Live: https://studyloop-bi2z.onrender.com (one-click demo). Video: YouTube link |
 | Each team member's contribution | This file, "Team contributions"; `docs/CONTRIBUTIONS.md` |
 
 | Rule | How the project complies |
